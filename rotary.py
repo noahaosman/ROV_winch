@@ -7,7 +7,8 @@
 # Documentation:
 #   https://github.com/MikeTeachman/micropython-rotary
 
-import micropython
+import micropython, time
+from machine import Pin
 
 _DIR_CW = const(0x10)  # Clockwise step
 _DIR_CCW = const(0x20)  # Counter-clockwise step
@@ -119,7 +120,7 @@ class Rotary(object):
         if l not in self._listener:
             raise ValueError('{} is not an installed listener'.format(l))
         self._listener.remove(l)
-        
+
     def _process_rotary_pins(self, pin):
         old_value = self._value
         clk_dt_pins = (self._hal_get_clk_value() <<
@@ -161,3 +162,77 @@ class Rotary(object):
                 micropython.schedule(_trigger, self)
         except:
             pass
+
+
+
+IRQ_RISING_FALLING = Pin.IRQ_RISING | Pin.IRQ_FALLING
+
+
+class RotaryIRQ(Rotary):
+    def __init__(
+        self,
+        pin_num_clk,
+        pin_num_dt,
+        block_radius,
+        min_val=0,
+        max_val=10,
+        reverse=False,
+        range_mode=Rotary.RANGE_UNBOUNDED,
+        pull_up=False,
+        half_step=False,
+    ):
+
+        self.time0 = time.ticks_us() # initialize timer
+        self.block_circumference = 2.0 * block_radius * 3.14159
+        self.prior_position = 0#self.value()/100.0 * self.block_circumference # intitialize position
+
+
+        super().__init__(min_val, max_val, reverse, range_mode, half_step)
+
+        if pull_up:
+            self._pin_clk = Pin(pin_num_clk, Pin.IN, Pin.PULL_UP)
+            self._pin_dt = Pin(pin_num_dt, Pin.IN, Pin.PULL_UP)
+        else:
+            self._pin_clk = Pin(pin_num_clk, Pin.IN)
+            self._pin_dt = Pin(pin_num_dt, Pin.IN)
+
+        self._hal_enable_irq()
+
+    def _enable_clk_irq(self):
+        self._pin_clk.irq(self._process_rotary_pins, IRQ_RISING_FALLING)
+
+    def _enable_dt_irq(self):
+        self._pin_dt.irq(self._process_rotary_pins, IRQ_RISING_FALLING)
+
+    def _disable_clk_irq(self):
+        self._pin_clk.irq(None, 0)
+
+    def _disable_dt_irq(self):
+        self._pin_dt.irq(None, 0)
+
+    def _hal_get_clk_value(self):
+        return self._pin_clk.value()
+
+    def _hal_get_dt_value(self):
+        return self._pin_dt.value()
+
+    def _hal_enable_irq(self):
+        self._enable_clk_irq()
+        self._enable_dt_irq()
+
+    def _hal_disable_irq(self):
+        self._disable_clk_irq()
+        self._disable_dt_irq()
+
+    def _hal_close(self):
+        self._hal_disable_irq()
+
+    def getState(self):
+        time1 = time.ticks_us()
+        dt = time.ticks_diff(time1,self.time0)*1e-6
+        position = self.value()/100.0 * self.block_circumference
+        enc_vel = (position-self.prior_position)/dt
+        out_string='SPD '+str(enc_vel)+' DIS '+str(position)+'\r\n'
+        self.time0 = time1
+        self.prior_position = position
+        return out_string
