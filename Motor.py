@@ -16,6 +16,7 @@ class Motor:
     ):
         self.FWD0_REV1 = Pin(FWD0_REV1_pin, Pin.OUT)
         self.ON = Pin(ON_OFF_pin, Pin.OUT)
+        self.ON.value(0)
         self.pwm = PWM(Pin(mot_pot_pin))
 
         self.pwm.freq(50)

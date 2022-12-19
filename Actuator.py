@@ -4,8 +4,8 @@ from machine import Pin, PWM, I2C
 # constants for actuator
 RETRACT = 1
 EXTEND = 0
-false_pulse_delay_actuator_feedback = 0 # (zero for no debounce delay)
-pulses_per_inch = 48
+false_pulse_delay_actuator_feedback = 0#2 # (zero for no debounce delay)
+pulses_per_inch = 54
 false_pulse_delay_reed_sw = 250 # ms
 
 class Actuator:
@@ -14,6 +14,7 @@ class Actuator:
         self,
         scl_pin,
         sda_pin,
+        ON_OFF_pin,
         direction_pin,
         feedback_pin,
         rotation_pin,
@@ -24,6 +25,7 @@ class Actuator:
             1,
             scl=Pin(scl_pin),
             sda=Pin(sda_pin))
+        self.ON = Pin(ON_OFF_pin, Pin.OUT)
         self.direction = Pin(direction_pin, Pin.OUT)
         self.current_direction = EXTEND
 
@@ -37,7 +39,11 @@ class Actuator:
         self.last_reed_time = time.ticks_ms()-false_pulse_delay_reed_sw
         self.NeedToMoveActuator = False
 
+        self.ON.value(0)
+
         self.cable_diameter = cable_diameter
+
+        self.MAspeed = 100
 
         with open('stacking_state.txt') as infp:
             self.line_stack_state = int(infp.read())
@@ -53,6 +59,11 @@ class Actuator:
 
 # write speed to actuator. 0<=value<=100
     def writeSpeed(self, value):
+        if value == 0:
+            self.ON.value(0)
+        else:
+            self.ON.value(1)
+
         value = round(value/100*4095)
         buf=bytearray(2)
         buf[0]=(value >> 8) & 0xFF
@@ -61,47 +72,48 @@ class Actuator:
 
 
 # define actuator speed as a function of the winch speed and distance to move
-    def getSpeed(self, winch_speed, distance):
-        if winch_speed == 0: # if maunally adjusting, base speed off distance to move
-            speed = distance/10*100
+    def getSpeed(self, winch_speed, distance, manual_adjust):
+        if manual_adjust: # if maunally adjusting, base speed off distance to move
+            speed = self.MAspeed#100###distance/10*100
         else: # else if winching, base speed off winch speed
             x2 = self.calculateSpeed(distance, winch_speed, 0.33)
-            print("Actuator speed: ",x2)
             speed = x2
-        speed = round(max(20, min(100, speed))) # bound speed from 20 <-> 100
+        speed = round(max(25, min(100, speed))) # bound speed from 20 <-> 100
+        print("Actuator speed: ", speed)
         return speed
 
 
 # move actuator some distance in inches
-    def move(self, winch_speed, direction = None, distance = None): # default to cable diameter
+    def move(self, winch_speed, direction = None, distance = None, manual_adjust = False): # default to cable diameter
         if direction is None:
             direction = self.current_direction
         if distance is None:
             distance = self.cable_diameter
         self.position = 0   # zero position tracker
         self.direction.value(direction)
-        speed = self.getSpeed(winch_speed, distance)
+        speed = self.getSpeed(winch_speed, distance, manual_adjust)
         self.writeSpeed(speed)  # write a speed
-        target_pulses = (round(pulses_per_inch*distance + self.Overshoot(speed))) # add some overshoot to cancel bounceback
+        target_pulses = (round(pulses_per_inch*distance - self.Overshoot(speed))) # add some overshoot for time to turn off
         stationary_counter = 0
         start_time = time.ticks_ms()
+        print("========== New move loop. Time: ",start_time*0.001, ". Target pulses: ",round(pulses_per_inch*distance)," ==========")
         # check counted pulses every 50 ms.
         while True:
-            print("------------------------loop")
             prior_position = self.position
             time.sleep(0.05)  # wait for actuator to move
+            print("-------------loop-------------")
             if self.position >= target_pulses:  # if we've reached our target,
-                print("target reached, bounceback initiated ... ")
-                self.direction.value(self.opposite(direction)) # bounce back
+                print("target reached")
                 self.writeSpeed(0)  # turn off actuator
+                self.direction.value(self.opposite(direction)) # bounce back
                 break
             elif self.position == prior_position:  # if actuator is not moving
                 stationary_counter = stationary_counter + 1
-                if stationary_counter > 5:
+                if stationary_counter > 10:
                     print("edge detected")
-                    if winch_speed > 0: # reverse direction only if currently winching
-                        self.changeDirection()
                     self.writeSpeed(0)  # turn off actuator
+                    if not manual_adjust: # reverse direction only if currently winching
+                        self.changeDirection()
                     break
             else:
                 stationary_counter = 0
@@ -135,7 +147,10 @@ class Actuator:
 
 # actuator tick overshoot as a function of actuator speed
     def Overshoot(self, x):
-        out = 0.695302 + 0.267472*x
+        c0 = 0.0157003
+        c1 = 0.0705877
+        c2 = -0.000215076
+        out = c0 + c1*x + c2*x**2
         return out
 
 # return optimal actuator speed for a given distance, winch speed, % rotation time for actuation
