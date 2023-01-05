@@ -4,6 +4,7 @@ from rotary import RotaryIRQ
 from Motor import Motor
 from Actuator import Actuator
 
+
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -59,19 +60,19 @@ print("initialized")
 level_wind.MAspeed = 100
 level_wind.move(0, 1, 12, True)
 
-level_wind.MAspeed = 20
-distance = 0.375
-steps = 8
+level_wind.MAspeed = 100
+distance = 1
+steps = 1
 
-SPD =  32  # motor speed
+SPD =50# motor speed
 
 it = 0
-while it < 8:
+while it < steps:
 
     winch.ON.value(1)
     winch.FWD0_REV1.value(0)
-    time.sleep(0.1)
     winch.move_servo(SPD)
+    time.sleep(1)
 
     if level_wind.NeedToMoveActuator:
         level_wind.move(0, 0, abs(distance), True)
@@ -83,10 +84,10 @@ while it < 8:
         level_wind.NeedToMoveActuator = True
 
 
-
+time.sleep(1)
 winch.move_servo(0)
 time.sleep(0.1)
 winch.ON.value(0)
 winch.FWD0_REV1.value(0)
-while True:
-    time.sleep(1)
+
+time.sleep(1)

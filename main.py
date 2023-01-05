@@ -23,6 +23,7 @@ winch = Motor(
     FWD0_REV1_pin = 15,
     ON_OFF_pin = 14,
     mot_pot_pin = 19,
+    current_sensor_pin = 28
 )
 # ------------------------------------------------------------------------------
 
@@ -56,9 +57,9 @@ print("initialized")
 # ==============================================================================
 
 while True:
-
+    
     try:
-
+        
         # read any serial in
         try:
             serial_in = uart0.readline()
@@ -66,7 +67,7 @@ while True:
             in_strings = in_decoded.split()
             print(in_strings)
         except:
-            in_strings = [0]
+            in_strings = ['N/A']
             pass
 
         # move motor FWD / REV / OFF
@@ -112,12 +113,12 @@ while True:
                     level_wind.move(0, direction, abs(distance), True)
 
 
-        # serial write encoder position & velocity
+        # serial write encoder position & velocity 
         try:
             uart0.write(bytes(encoder.getState(),'UTF-8'))
         except:
             print("error in sending serial output")
-
+            
 
         # Check if actuator needs to be moved
         if level_wind.NeedToMoveActuator:
@@ -130,16 +131,30 @@ while True:
             level_wind.NeedToMoveActuator = False
         else:
             time.sleep(0.1)
-
-
-
-
+            
+        # Measure current draw of motor. Shut off if above threshold 
+        if winch.ON.value()==1:
+            volty = winch.current_sensor.read_u16()* 3.3 / 65535
+            curry = -10 * volty + 25
+            vs = '%.2f' % volty
+            cs = '%.2f' % curry
+            print(vs,"V ; ",cs, "A")
+            
+            if curry > 5:
+                winch.ON.value(0)
+                winch.move_servo(0)
+                level_wind.writeSpeed(0)
+                print("HIGH CURRENT DETECTED! shutting off motor...")
 
         heartbeat.toggle()
-
+        
     except Exception as err:
         print("Exception raised. Turning off winch ... ")
         winch.ON.value(0)
         winch.move_servo(0)
-        level_wind.writeSpeed(0)
-        print(traceback.format_exc())
+        level_wind.writeSpeed(0) 
+        print(err)
+    
+    
+    
+    

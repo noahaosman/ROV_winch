@@ -1,5 +1,5 @@
 import time
-from machine import Pin, PWM
+from machine import Pin, PWM, ADC
 
 class Motor:
 
@@ -13,6 +13,7 @@ class Motor:
         FWD0_REV1_pin,
         ON_OFF_pin,
         mot_pot_pin,
+        current_sensor_pin
     ):
         self.FWD0_REV1 = Pin(FWD0_REV1_pin, Pin.OUT)
         self.ON = Pin(ON_OFF_pin, Pin.OUT)
@@ -22,6 +23,8 @@ class Motor:
         self.pwm.freq(50)
         self.servo_position = self.uMIN  # intialize winch speed as 0
         self.pwm.duty_ns(self.servo_position)  #   set mot pot to zero
+
+        self.current_sensor = ADC(Pin(current_sensor_pin, mode=Pin.IN))
 
     def move_servo(self, percent):
         move_to = int(self.uMIN + (self.uMAX-self.uMIN)*(percent/100))

@@ -4,7 +4,7 @@ from machine import Pin, PWM, I2C
 # constants for actuator
 RETRACT = 1
 EXTEND = 0
-false_pulse_delay_actuator_feedback = 0#2 # (zero for no debounce delay)
+false_pulse_delay_actuator = 2 # (zero for no debounce delay)
 pulses_per_inch = 54
 false_pulse_delay_reed_sw = 250 # ms
 
@@ -31,10 +31,10 @@ class Actuator:
 
         self.feedback = Pin(feedback_pin, Pin.IN, Pin.PULL_UP)
         self.feedback.irq(trigger=Pin.IRQ_RISING, handler=self.updatePosition)
-        self.last_pulse_time = time.ticks_ms()-false_pulse_delay_actuator_feedback
+        self.last_pulse_time = time.ticks_ms()-false_pulse_delay_actuator
         self.position = 0
 
-        self.reed_sw = Pin(rotation_pin, Pin.IN, Pin.PULL_UP)
+        self.reed_sw = Pin(rotation_pin, Pin.IN, Pin.PULL_DOWN)
         self.reed_sw.irq(trigger=Pin.IRQ_RISING, handler=self.rotationTrackingReedSwitchTrigger)
         self.last_reed_time = time.ticks_ms()-false_pulse_delay_reed_sw
         self.NeedToMoveActuator = False
@@ -45,16 +45,19 @@ class Actuator:
 
         self.MAspeed = 100
 
+        self.time_init = time.ticks_ms()*0.001
+
         with open('stacking_state.txt') as infp:
             self.line_stack_state = int(infp.read())
 
 # update actuator position
     def updatePosition(self, p):
         current_pulse_time = time.ticks_ms()
-        if (current_pulse_time - self.last_pulse_time ) > false_pulse_delay_actuator_feedback: # debouncing
+        if (current_pulse_time - self.last_pulse_time ) > false_pulse_delay_actuator: # debouncing
             self.position = self.position + 1
+###            print("position: ", self.position," TBP: ", (current_pulse_time - self.last_pulse_time )*0.001)
             self.last_pulse_time = current_pulse_time
-            print("position: ", self.position," time: ", current_pulse_time*0.001)
+
 
 
 # write speed to actuator. 0<=value<=100
@@ -74,12 +77,15 @@ class Actuator:
 # define actuator speed as a function of the winch speed and distance to move
     def getSpeed(self, winch_speed, distance, manual_adjust):
         if manual_adjust: # if maunally adjusting, base speed off distance to move
-            speed = self.MAspeed#100###distance/10*100
+            if distance<0.75:
+                speed = 20
+            else:
+                speed = 100
         else: # else if winching, base speed off winch speed
             x2 = self.calculateSpeed(distance, winch_speed, 0.33)
             speed = x2
         speed = round(max(25, min(100, speed))) # bound speed from 20 <-> 100
-        print("Actuator speed: ", speed)
+###        print("Actuator speed: ", speed)
         return speed
 
 
@@ -93,24 +99,29 @@ class Actuator:
         self.direction.value(direction)
         speed = self.getSpeed(winch_speed, distance, manual_adjust)
         self.writeSpeed(speed)  # write a speed
+        self.time_init = time.ticks_ms()*0.001
+        self.last_pulse_time = self.time_init*1000
         target_pulses = (round(pulses_per_inch*distance - self.Overshoot(speed))) # add some overshoot for time to turn off
         stationary_counter = 0
         start_time = time.ticks_ms()
-        print("========== New move loop. Time: ",start_time*0.001, ". Target pulses: ",round(pulses_per_inch*distance)," ==========")
+        loop_start = start_time
+###        print("========== New move loop. Time: ",start_time*0.001-self.time_init, ". Target pulses: ",round(pulses_per_inch*distance)," ==========")
         # check counted pulses every 50 ms.
         while True:
             prior_position = self.position
             time.sleep(0.05)  # wait for actuator to move
-            print("-------------loop-------------")
+            loop_end = time.ticks_ms()
+###            print("-------------loop------------- Time: ", (loop_end-loop_start)*0.001)
+            loop_start = loop_end
             if self.position >= target_pulses:  # if we've reached our target,
-                print("target reached")
+###                print("target reached. Total time: ", (time.ticks_ms()-start_time)*0.001)
                 self.writeSpeed(0)  # turn off actuator
                 self.direction.value(self.opposite(direction)) # bounce back
                 break
             elif self.position == prior_position:  # if actuator is not moving
                 stationary_counter = stationary_counter + 1
                 if stationary_counter > 10:
-                    print("edge detected")
+###                    print("edge detected")
                     self.writeSpeed(0)  # turn off actuator
                     if not manual_adjust: # reverse direction only if currently winching
                         self.changeDirection()
@@ -121,7 +132,7 @@ class Actuator:
 
 # change actuator direction
     def changeDirection(self):
-        print("reversing direction")
+###        print("reversing direction")
         self.current_direction = self.opposite(self.current_direction)
         self.direction.value(self.current_direction) # reverse direction
         self.line_stack_state = self.opposite(self.line_stack_state)
@@ -131,12 +142,15 @@ class Actuator:
 
 # reed switch irq for rotation tracking
     def rotationTrackingReedSwitchTrigger(self,p):
-        time.sleep_ms(10)
+###        print("!!ah!!")
         current_reed_time = time.ticks_ms()
-        if self.reed_sw.value() == 1 and (current_reed_time - self.last_reed_time ) > false_pulse_delay_reed_sw:
-            self.last_reed_time = current_reed_time
-            self.NeedToMoveActuator = True  # move actuator one cable width
-            print("rotation reed switch triggered, time: ",current_reed_time*0.001)
+        if (current_reed_time - self.last_reed_time ) > false_pulse_delay_reed_sw:
+            time.sleep_ms(5)
+###            print("**5ms**")
+            if self.reed_sw.value() == 1:
+                self.last_reed_time = current_reed_time
+                self.NeedToMoveActuator = True  # move actuator one cable width
+###                print("rotation reed switch triggered, time: ",current_reed_time*0.001-self.time_init)
 
 
 # a useful function to flip booleans, ie 0 --> 1 and 1 --> 0
