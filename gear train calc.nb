@@ -1,0 +1,218 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 12.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      8543,        208]
+NotebookOptionsPosition[      7848,        187]
+NotebookOutlinePosition[      8243,        203]
+CellTagsIndexPosition[      8200,        200]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"goalRatio", " ", "=", " ", "60"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"gears", " ", "=", " ", 
+   RowBox[{"{", 
+    RowBox[{
+    "12", ",", "15", ",", "16", ",", "18", ",", "20", ",", "24", ",", "28", 
+     ",", "30", ",", "32", ",", "35", ",", "36", ",", "40", ",", "45", ",", 
+     "48"}], 
+    RowBox[{"(*", 
+     RowBox[{
+     ",", "50", ",", "56", ",", "60", ",", "64", ",", "70", ",", "72", ",", 
+      "80"}], "*)"}], "}"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"pertol", " ", "=", "5"}], ";", 
+  RowBox[{"(*", 
+   RowBox[{"percent", " ", "tolerance"}], "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"couplings", " ", "=", "2"}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"numgears", " ", "=", " ", 
+   RowBox[{
+    RowBox[{"2", "*", "couplings"}], "+", "2"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{"Catch", "[", "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{"maxratio", " ", "=", " ", 
+    RowBox[{
+     RowBox[{
+      RowBox[{"(", 
+       RowBox[{
+        RowBox[{"Max", "[", "gears", "]"}], "/", 
+        RowBox[{"Min", "[", "gears", "]"}]}], ")"}], "^", 
+      RowBox[{"(", 
+       RowBox[{"numgears", "/", "2"}], ")"}]}], "//", "N"}]}], ";", 
+   "\[IndentingNewLine]", 
+   RowBox[{"If", "[", 
+    RowBox[{
+     RowBox[{"maxratio", "<", "goalRatio"}], ",", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"Print", "[", 
+       RowBox[{"\"\<Maximum gear ratio is \>\"", "<>", 
+        RowBox[{"ToString", "[", "maxratio", "]"}], "<>", 
+        "\"\<. Quitting...\>\""}], "]"}], ";", "\[IndentingNewLine]", 
+      RowBox[{"Throw", "[", "\"\< \>\"", "]"}], ";"}]}], 
+    "\[IndentingNewLine]", "]"}], ";", "\[IndentingNewLine]", 
+   "\[IndentingNewLine]", 
+   RowBox[{"allgeartrains", " ", "=", " ", 
+    RowBox[{"Tuples", "[", 
+     RowBox[{"gears", ",", 
+      RowBox[{"{", "numgears", "}"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+   RowBox[{"allgearratios", " ", "=", " ", 
+    RowBox[{"Table", "[", 
+     RowBox[{
+      RowBox[{"{", "}"}], ",", 
+      RowBox[{"Length", "[", "allgeartrains", "]"}]}], "]"}]}], ";", 
+   "\[IndentingNewLine]", "\[IndentingNewLine]", 
+   RowBox[{"err", " ", "=", " ", "100"}], ";", "\[IndentingNewLine]", 
+   RowBox[{"For", "[", 
+    RowBox[{
+     RowBox[{"i", "=", "1"}], ",", 
+     RowBox[{"i", "<=", 
+      RowBox[{"Length", "[", "allgeartrains", "]"}]}], ",", 
+     RowBox[{"i", "++"}], ",", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"gearratio", " ", "=", " ", "1"}], ";", "\[IndentingNewLine]", 
+      RowBox[{"For", "[", 
+       RowBox[{
+        RowBox[{"j", "=", "numgears"}], ",", 
+        RowBox[{"j", ">", "1"}], ",", 
+        RowBox[{"j", "=", 
+         RowBox[{"j", "-", "2"}]}], ",", "\[IndentingNewLine]", 
+        RowBox[{"gearratio", " ", "=", " ", 
+         RowBox[{"gearratio", "*", 
+          RowBox[{"N", "[", 
+           RowBox[{"(", 
+            RowBox[{
+             RowBox[{
+              RowBox[{"allgeartrains", "[", 
+               RowBox[{"[", "i", "]"}], "]"}], "[", 
+              RowBox[{"[", "j", "]"}], "]"}], "/", 
+             RowBox[{
+              RowBox[{"allgeartrains", "[", 
+               RowBox[{"[", "i", "]"}], "]"}], "[", 
+              RowBox[{"[", 
+               RowBox[{"j", "-", "1"}], "]"}], "]"}]}], ")"}], "]"}]}]}]}], 
+       "\[IndentingNewLine]", "]"}], ";", "\[IndentingNewLine]", 
+      RowBox[{"erri", "=", 
+       RowBox[{"Abs", "[", 
+        RowBox[{"gearratio", "-", "goalRatio"}], "]"}]}], ";", 
+      "\[IndentingNewLine]", 
+      RowBox[{"If", "[", 
+       RowBox[{
+        RowBox[{"erri", "<", "err"}], ",", "\[IndentingNewLine]", 
+        RowBox[{
+         RowBox[{"bestGearTrain", " ", "=", " ", "i"}], ";", 
+         "\[IndentingNewLine]", 
+         RowBox[{"bestGearRatio", " ", "=", " ", "gearratio"}], ";", 
+         "\[IndentingNewLine]", 
+         RowBox[{"err", " ", "=", "erri"}], ";", "\[IndentingNewLine]", 
+         RowBox[{"If", "[", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"erri", "/", "goalRatio"}], "*", "100"}], "<", 
+            "pertol"}], ",", 
+           RowBox[{"Throw", "[", "\"\< \>\"", "]"}]}], "]"}]}]}], 
+       "\[IndentingNewLine]", "]"}], ";"}]}], "\[IndentingNewLine]", "]"}], 
+   ";"}], "\[IndentingNewLine]", "]"}], "\[IndentingNewLine]", 
+ RowBox[{"Print", "[", 
+  RowBox[{"allgeartrains", "[", 
+   RowBox[{"[", "bestGearTrain", "]"}], "]"}], "]"}], "\[IndentingNewLine]", 
+ RowBox[{"Print", "[", 
+  RowBox[{"bestGearRatio", "//", "N"}], "]"}]}], "Input",
+ CellChangeTimes->{{3.882973993256352*^9, 3.8829740729514427`*^9}, {
+   3.882974106006995*^9, 3.8829741856039762`*^9}, {3.8829742159471083`*^9, 
+   3.882974281388736*^9}, {3.882974324777067*^9, 3.8829744601267567`*^9}, {
+   3.882975174477828*^9, 3.882975244529563*^9}, {3.882975280204554*^9, 
+   3.882975323754917*^9}, {3.882975436721409*^9, 3.882975732848791*^9}, {
+   3.882975782819683*^9, 3.8829759120852947`*^9}, {3.88297596224087*^9, 
+   3.88297598877407*^9}, 3.882976058964725*^9, {3.8829761421351767`*^9, 
+   3.8829762047681713`*^9}, {3.8829806962913113`*^9, 3.882980873374845*^9}, {
+   3.882980931058641*^9, 3.882980979281802*^9}, {3.8829811004533863`*^9, 
+   3.882981115045639*^9}, {3.882981633371147*^9, 3.882981660549178*^9}, {
+   3.8829818892394047`*^9, 3.882981922851602*^9}, {3.882981958430915*^9, 
+   3.882981981548428*^9}, {3.882982040354589*^9, 3.882982050898769*^9}, {
+   3.8829823875884943`*^9, 3.882982478690346*^9}, {3.88298254846974*^9, 
+   3.882982553525812*^9}, 3.882982584505597*^9, {3.882982616361039*^9, 
+   3.882982751511421*^9}, 3.8829828746742268`*^9, 3.8829832760532084`*^9, {
+   3.882983662799233*^9, 3.8829837520256968`*^9}, {3.8829837961319427`*^9, 
+   3.882983906639686*^9}, {3.88298396809536*^9, 3.882983969242229*^9}, {
+   3.8829840190602407`*^9, 3.882984043158646*^9}, {3.882984086224616*^9, 
+   3.882984088632131*^9}, {3.882984143850719*^9, 3.882984151075427*^9}, 
+   3.8829854813242693`*^9, {3.882985535970354*^9, 3.88298555231223*^9}},
+ CellLabel->"In[31]:=",ExpressionUUID->"3214b346-a108-473b-9653-a0fc461cca39"],
+
+Cell[BoxData["\<\" \"\>"], "Output",
+ CellChangeTimes->{{3.88298389301578*^9, 3.8829839096121197`*^9}, 
+   3.8829840457511597`*^9, 3.882984118372101*^9, 3.8829841591805477`*^9, 
+   3.882985482809684*^9, {3.8829855377265863`*^9, 3.88298556039214*^9}},
+ CellLabel->"Out[35]=",ExpressionUUID->"7af9604f-f95e-40dd-ad7f-7bc820f36048"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"{", 
+  RowBox[{"12", ",", "45", ",", "12", ",", "48", ",", "12", ",", "48"}], 
+  "}"}]], "Print",
+ CellChangeTimes->{{3.882983893021208*^9, 3.882983909600898*^9}, 
+   3.882984045745256*^9, 3.882984118369672*^9, 3.882984159183784*^9, 
+   3.8829854828056173`*^9, {3.8829855377243347`*^9, 3.882985560401208*^9}},
+ CellLabel->
+  "During evaluation of \
+In[31]:=",ExpressionUUID->"adcdd729-0287-40b7-ae72-f91807751d03"],
+
+Cell[BoxData["60.`"], "Print",
+ CellChangeTimes->{{3.882983893021208*^9, 3.882983909600898*^9}, 
+   3.882984045745256*^9, 3.882984118369672*^9, 3.882984159183784*^9, 
+   3.8829854828056173`*^9, {3.8829855377243347`*^9, 3.882985560408283*^9}},
+ CellLabel->
+  "During evaluation of \
+In[31]:=",ExpressionUUID->"5f50ccdb-b8ea-45d1-b46e-11485549ab0e"]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{720, 847},
+WindowMargins->{{Automatic, -1440}, {44, Automatic}},
+FrontEndVersion->"12.3 for Mac OS X x86 (64-bit) (July 9, 2021)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"c35b570c-97ca-48e6-961b-41d98a423b50"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 6095, 134, 703, "Input",ExpressionUUID->"3214b346-a108-473b-9653-a0fc461cca39"],
+Cell[6678, 158, 329, 4, 34, "Output",ExpressionUUID->"7af9604f-f95e-40dd-ad7f-7bc820f36048"],
+Cell[CellGroupData[{
+Cell[7032, 166, 438, 9, 24, "Print",ExpressionUUID->"adcdd729-0287-40b7-ae72-f91807751d03"],
+Cell[7473, 177, 347, 6, 24, "Print",ExpressionUUID->"5f50ccdb-b8ea-45d1-b46e-11485549ab0e"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)
+

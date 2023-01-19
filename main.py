@@ -23,7 +23,8 @@ winch = Motor(
     FWD0_REV1_pin = 15,
     ON_OFF_pin = 14,
     mot_pot_pin = 19,
-    current_sensor_pin = 28
+    current_sensor_pin = 28,
+    current_limit = 6
 )
 # ------------------------------------------------------------------------------
 
@@ -35,7 +36,7 @@ level_wind = Actuator(
     direction_pin = 16,
     feedback_pin = 7,
     rotation_pin = 26,
-    cable_diameter = 0.375
+    cable_diameter = 0.3125
 )
 level_wind.writeSpeed(0)
 # ------------------------------------------------------------------------------
@@ -57,9 +58,9 @@ print("initialized")
 # ==============================================================================
 
 while True:
-    
+
     try:
-        
+
         # read any serial in
         try:
             serial_in = uart0.readline()
@@ -68,6 +69,7 @@ while True:
             print(in_strings)
         except:
             in_strings = ['N/A']
+            out_string = encoder.getState()
             pass
 
         # move motor FWD / REV / OFF
@@ -96,29 +98,30 @@ while True:
                 print("ERROR: invalid winch speed")
                 winch.ON.value(0)
 
+            out_string = "Winch speed set.\r\n"
+
         # manually adjust level wind postition
         elif in_strings[0] is "LWA":
             if winch.ON.value() == 0: # make sure motor is OFF!
-                SPD = 0
-                if in_strings[1] == 'cd':
-                        print('changing level wind direction')
-                        level_wind.changeDirection()
-                else:
-                    distance = float(in_strings[1])
-                    print('level wind adjusting '+in_strings[1]+' inches')
-                    if distance > 0:
-                        direction = 0
-                    else:
-                        direction = 1
-                    level_wind.move(0, direction, abs(distance), True)
+                level_wind.ManualAdjust(in_strings[1])
+                out_string = "Level wind adjusted.\r\n"
+            else:
+                out_string = "Motor must be stationary before adjusting level wind.\r\n"
 
+        # Adjust cable diameter parameter
+        elif in_strings[0] is "TDA":
+            if winch.ON.value() == 0: # make sure motor is OFF!
+                level_wind.cable_diameter = float(in_strings[1])
+                out_string = "Cable diameter updated.\r\n"
+            else:
+                out_string = "Motor must be stationary before changing parameter.\r\n"
 
-        # serial write encoder position & velocity 
+        # serial write encoder position & velocity
         try:
-            uart0.write(bytes(encoder.getState(),'UTF-8'))
+            uart0.write(bytes(out_string,'UTF-8'))
         except:
             print("error in sending serial output")
-            
+
 
         # Check if actuator needs to be moved
         if level_wind.NeedToMoveActuator:
@@ -131,30 +134,14 @@ while True:
             level_wind.NeedToMoveActuator = False
         else:
             time.sleep(0.1)
-            
-        # Measure current draw of motor. Shut off if above threshold 
-        if winch.ON.value()==1:
-            volty = winch.current_sensor.read_u16()* 3.3 / 65535
-            curry = -10 * volty + 25
-            vs = '%.2f' % volty
-            cs = '%.2f' % curry
-            print(vs,"V ; ",cs, "A")
-            
-            if curry > 5:
-                winch.ON.value(0)
-                winch.move_servo(0)
-                level_wind.writeSpeed(0)
-                print("HIGH CURRENT DETECTED! shutting off motor...")
+
+        winch.measure_current()
 
         heartbeat.toggle()
-        
+
     except Exception as err:
         print("Exception raised. Turning off winch ... ")
         winch.ON.value(0)
         winch.move_servo(0)
-        level_wind.writeSpeed(0) 
+        level_wind.writeSpeed(0)
         print(err)
-    
-    
-    
-    
