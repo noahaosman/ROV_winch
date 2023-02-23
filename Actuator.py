@@ -98,8 +98,6 @@ class Actuator:
         self.last_pulse_time = self.time_init*1000
         target_pulses = (round(pulses_per_inch*distance - self.Overshoot(speed)))  # add some overshoot for time to turn off
         stationary_counter = 0
-        start_time = time.ticks_ms()
-        loop_start = start_time
         # check counted pulses every 50 ms.
         while True:
             prior_position = self.position
@@ -115,52 +113,66 @@ class Actuator:
                     if not manual_adjust:  # reverse direction only if currently winching
                         self.changeDirection()
                     break
-                else:
-                    stationary_counter = 0
+            else:
+                stationary_counter = 0
 
-    # change actuator direction
-        def changeDirection(self):
-            self.current_direction = self.opposite(self.current_direction)
-            self.direction.value(self.current_direction)  # reverse direction
-            self.line_stack_state = self.opposite(self.line_stack_state)
-            with open('stacking_state.txt') as infp:
-                infp.write(str(self.line_stack_state))
+# change actuator direction
+    def changeDirection(self):
+        self.current_direction = self.opposite(self.current_direction)
+        self.direction.value(self.current_direction)  # reverse direction
+        self.line_stack_state = self.opposite(self.line_stack_state)
+        with open('stacking_state.txt') as infp:
+            infp.write(str(self.line_stack_state))
 
-    # reed switch irq for rotation tracking
-        def rotationTrackingReedSwitchTrigger(self, p):
-            current_reed_time = time.ticks_ms()
-            if (current_reed_time - self.last_reed_time ) > false_pulse_delay_reed_sw:
-                time.sleep_ms(5)
-                if self.reed_sw.value() == 1:
-                    self.last_reed_time = current_reed_time
-                    self.NeedToMoveActuator = True  # move actuator one cable width
+# manually adjust level wind position
+    def ManualAdjust(self, in_string):
+        if in_string == 'cd':
+            print('changing level wind direction')
+            self.changeDirection()
+        else:
+            distance = float(in_string)
+            print('level wind adjusting '+in_string+' inches')
+            if distance > 0:
+                direction = 0
+            else:
+                direction = 1
+            self.move(0, direction, abs(distance), True)
 
-    # a useful function to flip booleans, ie 0 --> 1 and 1 --> 0
-        def opposite(self, input):
-            out = 1 - input
-            return out
+# reed switch irq for rotation tracking
+    def rotationTrackingReedSwitchTrigger(self, p):
+        current_reed_time = time.ticks_ms()
+        if (current_reed_time - self.last_reed_time) > false_pulse_delay_reed_sw:
+            time.sleep_ms(5)
+            if self.reed_sw.value() == 1:
+                self.last_reed_time = current_reed_time
+                self.NeedToMoveActuator = True  # move actuator one cable width
 
-    # actuator tick overshoot as a function of actuator speed
-        def Overshoot(self, x):
-            c0 = 0.0157003
-            c1 = 0.0705877
-            c2 = -0.000215076
-            out = c0 + c1*x + c2*x**2
-            return out
+# a useful function to flip booleans, ie 0 --> 1 and 1 --> 0
+    def opposite(self, input):
+        out = 1 - input
+        return out
 
-    # return optimal actuator speed for a given distance, winch speed, % rotation time for actuation
-        def calculateSpeed(self, x, winch_speed, perc):
-            # actuator speed in in/s = c0 + c1*P + c2*P^2
-            c0 = 0.054397
-            c1 = 0.0178693
-            c2 = -0.0000678376
-            SPR = self.secondsPerRotation(winch_speed)
-            T = perc*SPR
-            P = (-c1 + (c1**2 + 4 * c2 * (x/T - c0))**0.5) / (2 * c2)
-            return P
+# actuator tick overshoot as a function of actuator speed
+    def Overshoot(self, x):
+        c0 = 0.0157003
+        c1 = 0.0705877
+        c2 = -0.000215076
+        out = c0 + c1*x + c2*x**2
+        return out
 
-    # seconds per spool rotation as a function of motor speed
-        def secondsPerRotation(self, x):
-            rpm = -11.8876 + 0.372714*x + 0.00207748*x**2.0
-            out = 60/rpm
-            return out
+# return optimal actuator speed for a given distance, winch speed, % rotation time for actuation
+    def calculateSpeed(self, x, winch_speed, perc):
+        # actuator speed in in/s = c0 + c1*P + c2*P^2
+        c0 = 0.054397
+        c1 = 0.0178693
+        c2 = -0.0000678376
+        SPR = self.secondsPerRotation(winch_speed)
+        T = perc*SPR
+        P = (-c1 + (c1**2 + 4*c2*(x/T - c0))**0.5) / (2*c2)
+        return P
+
+# seconds per spool rotation as a function of motor speed
+    def secondsPerRotation(self, x):
+        rpm = -11.8876 + 0.372714*x + 0.00207748*x**2.0
+        out = 60/rpm
+        return out

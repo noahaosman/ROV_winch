@@ -101,10 +101,21 @@ while True:
             out_string = "Winch speed set.\r\n"
 
         # manually adjust level wind postition
+        # elif in_strings[0] == "LWA":
+        #     if winch.ON.value() == 0:  # make sure motor is OFF!
+        #         level_wind.ManualAdjust(in_strings[1])
+        #         out_string = "Level wind adjusted.\r\n"
+        #     else:
+        #         out_string = "Motor must be stationary before adjusting level wind.\r\n"
+        # manually adjust level wind postition
         elif in_strings[0] == "LWA":
             if winch.ON.value() == 0:  # make sure motor is OFF!
-                level_wind.ManualAdjust(in_strings[1])
-                out_string = "Level wind adjusted.\r\n"
+                if in_strings[1] == "CD":
+                    level_wind.changeDirection()
+                    out_string = "Level wind direction changed.\r\n"
+                else:
+                    level_wind.ManualAdjust(in_strings[1])
+                    out_string = "Level wind adjusted.\r\n"
             else:
                 out_string = "Motor must be stationary before adjusting level wind.\r\n"
 
@@ -124,6 +135,8 @@ while True:
         # serial write encoder position & velocity
         try:
             uart0.write(bytes(out_string, 'UTF-8'))
+            if out_string.split()[0] != "SPD":
+                print(out_string)
         except Exception:
             print("error sending serial output")
 
