@@ -36,7 +36,7 @@ level_wind = Actuator(
     direction_pin=16,
     feedback_pin=7,
     rotation_pin=26,
-    cable_diameter=0.3125
+    cable_diameter=0.4
 )
 level_wind.writeSpeed(0)
 # -----------------------------------------------------------------------------
@@ -98,44 +98,37 @@ while True:
                 print("ERROR: invalid winch speed")
                 winch.ON.value(0)
 
-            out_string = "Winch speed set.\r\n"
+            out_string = "INFO Winch speed set.\r\n"
 
-        # manually adjust level wind postition
-        # elif in_strings[0] == "LWA":
-        #     if winch.ON.value() == 0:  # make sure motor is OFF!
-        #         level_wind.ManualAdjust(in_strings[1])
-        #         out_string = "Level wind adjusted.\r\n"
-        #     else:
-        #         out_string = "Motor must be stationary before adjusting level wind.\r\n"
         # manually adjust level wind postition
         elif in_strings[0] == "LWA":
             if winch.ON.value() == 0:  # make sure motor is OFF!
                 if in_strings[1] == "CD":
                     level_wind.changeDirection()
-                    out_string = "Level wind direction changed.\r\n"
+                    out_string = "INFO Level wind direction changed.\r\n"
                 else:
                     level_wind.ManualAdjust(in_strings[1])
-                    out_string = "Level wind adjusted.\r\n"
+                    out_string = "INFO Level wind adjusted.\r\n"
             else:
-                out_string = "Motor must be stationary before adjusting level wind.\r\n"
+                out_string = "INFO Motor must be stationary before adjusting level wind.\r\n"
 
         # Adjust cable diameter parameter
         elif in_strings[0] == "TDA":
             if winch.ON.value() == 0:  # make sure motor is OFF!
                 level_wind.cable_diameter = float(in_strings[1])
-                out_string = "Cable diameter updated.\r\n"
+                out_string = "INFO Cable diameter updated.\r\n"
             else:
-                out_string = "Motor must be stationary before changing parameter.\r\n"
+                out_string = "INFO Motor must be stationary before changing parameter.\r\n"
 
         # Adjust current limit
         elif in_strings[0] == "CLA":
             winch.current_limit = float(in_strings[1])
-            out_string = "Current limit updated.\r\n"
+            out_string = "INFO Current limit updated.\r\n"
 
         # serial write encoder position & velocity
         try:
             uart0.write(bytes(out_string, 'UTF-8'))
-            if out_string.split()[0] != "SPD":
+            if out_string.split()[0] == "INFO":
                 print(out_string)
         except Exception:
             print("error sending serial output")
