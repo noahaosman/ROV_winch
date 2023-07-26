@@ -47,7 +47,7 @@ class Actuator:
         self.RotationCounter = 0
         Thread(daemon=True, target=self.rotationTrackingReedSw).start()
 
-        self.ON.value(0)
+        self.ON.value = 0
 
         self.cable_diameter = cable_diameter
 
@@ -70,9 +70,9 @@ class Actuator:
     # write speed to actuator. 0<=value<=100
     def writeSpeed(self, value):
         if value == 0:
-            self.ON.value(0)
+            self.ON.value = 0
         else:
-            self.ON.value(1)
+            self.ON.value = 1
 
         value = round(value/100*4095)
         buf = bytearray(2)
@@ -100,7 +100,7 @@ class Actuator:
         if distance is None:
             distance = self.cable_diameter
         self.position = 0   # zero position tracker
-        self.direction.value(direction)
+        self.direction.value = direction
         speed = self.getSpeed(winch_speed, distance, manual_adjust)
         self.writeSpeed(speed)  # write a speed
         self.time_init = time.time()
@@ -113,7 +113,7 @@ class Actuator:
             time.sleep(0.05)  # wait for actuator to move
             if self.position >= target_pulses:  # if we've reached our target,
                 self.writeSpeed(0)  # turn off actuator
-                self.direction.value(self.opposite(direction))  # bounce back
+                self.direction.value = self.opposite(direction)  # bounce back
                 break
             elif self.position == prior_position:  # if actuator is not moving
                 stationary_counter = stationary_counter + 1
@@ -128,7 +128,7 @@ class Actuator:
     # change actuator direction
     def changeDirection(self):
         self.current_direction = self.opposite(self.current_direction)
-        self.direction.value(self.current_direction)  # reverse direction
+        self.direction.value = self.current_direction  # reverse direction
         self.line_stack_state = self.opposite(self.line_stack_state)
         with open('stacking_state.txt') as infp:
             infp.write(str(self.line_stack_state))
@@ -153,7 +153,7 @@ class Actuator:
             current_reed_time = time.time()
             if (current_reed_time - self.last_reed_time) > false_pulse_delay_reed_sw:
                 time.sleep(0.005)
-                if self.reed_sw.value() == 1:
+                if self.reed_sw.value == 1:
                     self.last_reed_time = current_reed_time
                     self.NeedToMoveActuator = True  # move actuator one cable width
                     self.RotationCounter = self.RotationCounter + 1
