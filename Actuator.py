@@ -10,7 +10,7 @@ RETRACT = 1
 EXTEND = 0
 false_pulse_delay_actuator = 2  # (zero for no debounce delay)
 pulses_per_inch = 54
-false_pulse_delay_reed_sw = 250  # ms
+false_pulse_delay_reed_sw = 0.250  # s
 
 
 class Actuator:
@@ -34,7 +34,7 @@ class Actuator:
         self.feedback = DigitalInOut(eval('board.D'+str(feedback_pin)))
         self.feedback.direction = Direction.INPUT
         self.feedback.pull = Pull.UP
-        self.last_pulse_time = time.ticks_ms()-false_pulse_delay_actuator
+        self.last_pulse_time = time.time()-false_pulse_delay_actuator
         self.position = 0
         Thread(daemon=True, target=self.updatePosition).start()
 
@@ -42,7 +42,7 @@ class Actuator:
         self.reed_sw = DigitalInOut(eval('board.D'+str(rotation_pin)))
         self.reed_sw.direction = Direction.INPUT
         self.reed_sw.pull = Pull.DOWN
-        self.last_reed_time = time.ticks_ms()-false_pulse_delay_reed_sw
+        self.last_reed_time = time.time()-false_pulse_delay_reed_sw
         self.NeedToMoveActuator = False
         self.RotationCounter = 0
         Thread(daemon=True, target=self.rotationTrackingReedSw).start()
@@ -53,7 +53,7 @@ class Actuator:
 
         self.MAspeed = 100
 
-        self.time_init = time.ticks_ms()*0.001
+        self.time_init = time.time()
 
         with open('stacking_state.txt') as infp:
             self.line_stack_state = int(infp.read())
@@ -61,7 +61,7 @@ class Actuator:
     # count actuator feedback pulses
     def updatePosition(self):
         while True:
-            current_pulse_time = time.ticks_ms()
+            current_pulse_time = time.time()
             if (current_pulse_time - self.last_pulse_time) > false_pulse_delay_actuator:  # debouncing
                 self.position = self.position + 1
                 self.last_pulse_time = current_pulse_time
@@ -103,7 +103,7 @@ class Actuator:
         self.direction.value(direction)
         speed = self.getSpeed(winch_speed, distance, manual_adjust)
         self.writeSpeed(speed)  # write a speed
-        self.time_init = time.ticks_ms()*0.001
+        self.time_init = time.time()
         self.last_pulse_time = self.time_init*1000
         target_pulses = (round(pulses_per_inch*distance - self.Overshoot(speed)))  # add some overshoot for time to turn off
         stationary_counter = 0
@@ -150,7 +150,7 @@ class Actuator:
     # reed switch for rotation tracking     
     def rotationTrackingReedSw(self):
         while True:
-            current_reed_time = time.ticks_ms()
+            current_reed_time = time.time()
             if (current_reed_time - self.last_reed_time) > false_pulse_delay_reed_sw:
                 time.sleep_ms(5)
                 if self.reed_sw.value() == 1:
