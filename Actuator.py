@@ -152,7 +152,7 @@ class Actuator:
         while True:
             current_reed_time = time.time()
             if (current_reed_time - self.last_reed_time) > false_pulse_delay_reed_sw:
-                time.sleep_ms(5)
+                time.sleep(0.005)
                 if self.reed_sw.value() == 1:
                     self.last_reed_time = current_reed_time
                     self.NeedToMoveActuator = True  # move actuator one cable width

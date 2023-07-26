@@ -4,7 +4,7 @@ import board
 from digitalio import DigitalInOut, Direction, Pull  # GPIO module
 
 false_pulse_delay_actuator = 2  # (zero for no debounce delay)
-false_pulse_delay_reed_sw = 250  # ms
+false_pulse_delay_reed_sw = 0.250  # s
 
 class Switch:
 
