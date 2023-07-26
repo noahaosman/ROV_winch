@@ -2,8 +2,11 @@
 import time
 import board
 from digitalio import DigitalInOut, Direction, Pull  # GPIO module
-from gpiozero import AngularServo
 import Adafruit_ADS1x15
+from gpiozero import AngularServo
+from gpiozero.pins.pigpio import PiGPIOFactory
+
+factory = PiGPIOFactory()
 
 
 class Motor:
