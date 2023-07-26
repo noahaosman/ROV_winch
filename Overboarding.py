@@ -28,14 +28,14 @@ class Switch:
     #   3) retracted LOW , deployed LOW  ::  arm is moving into retracted position --> restrict motor to low speed
     def read_state(self, winch):
         while True:
-            if   self.retracted.value() == 1 and self.deployed.value() == 0:
-                winch.ON.value(0)
+            if   self.retracted.value == 1 and self.deployed.value == 0:
+                winch.ON.value = 0
                 winch.move_servo(0)
 
-            elif self.retracted.value() == 0 and self.deployed.value() == 1:
+            elif self.retracted.value == 0 and self.deployed.value == 1:
                 winch.move_servo(0)
 
-            elif self.retracted.value() == 0 and self.deployed.value() == 0:
+            elif self.retracted.value == 0 and self.deployed.value == 0:
                 winch.move_servo(0)
 
             else:

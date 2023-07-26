@@ -53,5 +53,6 @@ apt-get install -y python3-dev
 apt-get install -y python3-rpi.gpio
 pip3 install gpiozero
 apt-get install -y build-essential python3-smbus
+pip3 install Adafruit-Blinka
 pip3 install adafruit-ads1x15
 pip3 install pyserial

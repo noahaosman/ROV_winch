@@ -21,7 +21,7 @@ class Motor:
 
         self.ON = DigitalInOut(eval('board.D'+str(ON_OFF_pin)))
         self.ON.direction = Direction.OUTPUT
-        self.ON.value(0)
+        self.ON.value = 0
 
         self.servo = AngularServo(mot_pot_pin, min_angle=0, max_angle=270)
         self.servo.angle = 0
@@ -40,7 +40,7 @@ class Motor:
     def measure_current(self):
         # Measure current draw of motor. Shut off if above threshold
         voltage_divider = (100+47)/100
-        if self.ON.value() == 1:
+        if self.ON.value == 1:
             volty = self.current_sensor.read_adc(0, gain=1)
             curry = (-10 * volty * voltage_divider + 25)
             vs = '%.2f' % volty
@@ -54,7 +54,7 @@ class Motor:
                     curry = curry - 10 * volty * voltage_divider + 25
                 curry = curry/(i+2)
                 if abs(curry) > self.current_limit:
-                    self.ON.value(0)
+                    self.ON.value = 0
                     self.move_servo(0)
 #                     level_wind.writeSpeed(0)
                     print("HIGH CURRENT (", str(curry), "A ) DETECTED! shutting off motor...")

@@ -83,14 +83,14 @@ def control_winch():
                 # switch to FWD / REV / OFF
                 ROF = int(in_strings[1])
                 if (ROF == 0):  # off
-                    winch.ON.value(0)
+                    winch.ON.value = 0
                 elif ROF == 1:  # and encoder_position < max_line_out: # FWD (feed out line)
-                    winch.ON.value(1)
-                    winch.FWD0_REV1.value(0)
+                    winch.ON.value = 1
+                    winch.FWD0_REV1.value = 0
                     level_wind.current_direction = level_wind.line_stack_state
                 elif ROF == -1:  # REV (take in line)
-                    winch.ON.value(1)
-                    winch.FWD0_REV1.value(1)
+                    winch.ON.value = 1
+                    winch.FWD0_REV1.value = 1
                     level_wind.current_direction = level_wind.opposite(level_wind.line_stack_state)
 
                 # set the speed
@@ -101,13 +101,13 @@ def control_winch():
                     print("winch speed set")
                 else:
                     print("ERROR: invalid winch speed")
-                    winch.ON.value(0)
+                    winch.ON.value = 0
 
                 out_string = "INFO Winch speed set.\r\n"
 
             # manually adjust level wind postition
             elif in_strings[0] == "LWA":
-                if winch.ON.value() == 0:  # make sure motor is OFF!
+                if winch.ON.value == 0:  # make sure motor is OFF!
                     if in_strings[1] == "CD":
                         level_wind.changeDirection()
                         out_string = "INFO Level wind direction changed.\r\n"
@@ -119,7 +119,7 @@ def control_winch():
 
             # Adjust cable diameter parameter
             elif in_strings[0] == "TDA":
-                if winch.ON.value() == 0:  # make sure motor is OFF!
+                if winch.ON.value == 0:  # make sure motor is OFF!
                     level_wind.cable_diameter = float(in_strings[1])
                     out_string = "INFO Cable diameter updated.\r\n"
                 else:
@@ -156,7 +156,7 @@ def control_winch():
 
         except Exception as err:
             print("Exception raised. Turning off winch ... ")
-            winch.ON.value(0)
+            winch.ON.value = 0
             winch.move_servo(0)
             level_wind.writeSpeed(0)
             print(err)
