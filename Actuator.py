@@ -1,5 +1,9 @@
+# pyright: reportMissingImports=false
 import time
-from machine import Pin, I2C
+import board
+from digitalio import DigitalInOut, Direction, Pull  # GPIO module
+import smbus # i2c package
+from threading import Thread
 
 # constants for actuator
 RETRACT = 1
@@ -13,32 +17,35 @@ class Actuator:
 
     def __init__(
         self,
-        scl_pin,
-        sda_pin,
         ON_OFF_pin,
         direction_pin,
         feedback_pin,
         rotation_pin,
         cable_diameter=0.375
     ):
-
-        self.i2c = I2C(
-            1,
-            scl=Pin(scl_pin),
-            sda=Pin(sda_pin))
-        self.ON = Pin(ON_OFF_pin, Pin.OUT)
-        self.direction = Pin(direction_pin, Pin.OUT)
+        self.i2c = smbus.SMBus(1)
+        self.ON = DigitalInOut(eval('board.D'+str(ON_OFF_pin)))
+        self.ON.direction = Direction.OUTPUT
+        self.direction = DigitalInOut(eval('board.D'+str(direction_pin)))
+        self.direction.direction = Direction.OUTPUT
         self.current_direction = EXTEND
 
-        self.feedback = Pin(feedback_pin, Pin.IN, Pin.PULL_UP)
-        self.feedback.irq(trigger=Pin.IRQ_RISING, handler=self.updatePosition)
+        # optical feedback from the actuator:
+        self.feedback = DigitalInOut(eval('board.D'+str(feedback_pin)))
+        self.feedback.direction = Direction.INPUT
+        self.feedback.pull = Pull.UP
         self.last_pulse_time = time.ticks_ms()-false_pulse_delay_actuator
         self.position = 0
+        Thread(daemon=True, target=self.updatePosition).start()
 
-        self.reed_sw = Pin(rotation_pin, Pin.IN, Pin.PULL_DOWN)
-        self.reed_sw.irq(trigger=Pin.IRQ_RISING, handler=self.rotationTrackingReedSwitchTrigger)
+        # rotation tracking for spool
+        self.reed_sw = DigitalInOut(eval('board.D'+str(rotation_pin)))
+        self.reed_sw.direction = Direction.INPUT
+        self.reed_sw.pull = Pull.DOWN
         self.last_reed_time = time.ticks_ms()-false_pulse_delay_reed_sw
         self.NeedToMoveActuator = False
+        self.RotationCounter = 0
+        Thread(daemon=True, target=self.rotationTrackingReedSw).start()
 
         self.ON.value(0)
 
@@ -51,14 +58,16 @@ class Actuator:
         with open('stacking_state.txt') as infp:
             self.line_stack_state = int(infp.read())
 
-# update actuator position
-    def updatePosition(self, p):
-        current_pulse_time = time.ticks_ms()
-        if (current_pulse_time - self.last_pulse_time) > false_pulse_delay_actuator:  # debouncing
-            self.position = self.position + 1
-            self.last_pulse_time = current_pulse_time
+    # count actuator feedback pulses
+    def updatePosition(self):
+        while True:
+            current_pulse_time = time.ticks_ms()
+            if (current_pulse_time - self.last_pulse_time) > false_pulse_delay_actuator:  # debouncing
+                self.position = self.position + 1
+                self.last_pulse_time = current_pulse_time
+            time.sleep(0.001)
 
-# write speed to actuator. 0<=value<=100
+    # write speed to actuator. 0<=value<=100
     def writeSpeed(self, value):
         if value == 0:
             self.ON.value(0)
@@ -71,7 +80,7 @@ class Actuator:
         buf[1] = value & 0xFF
         self.i2c.writeto(0x60, buf)
 
-# define actuator speed as a function of the winch speed and distance to move
+    # define actuator speed as a function of the winch speed and distance to move
     def getSpeed(self, winch_speed, distance, manual_adjust):
         if manual_adjust:  # if maunally adjusting, base speed off distance to move
             if distance < 0.75:
@@ -84,7 +93,7 @@ class Actuator:
         speed = round(max(25, min(100, speed)))  # bound speed from 20 <-> 100
         return speed
 
-# move actuator some distance in inches
+    # move actuator some distance in inches
     def move(self, winch_speed, direction=None, distance=None, manual_adjust=False):  # default to cable diameter
         if direction is None:
             direction = self.current_direction
@@ -116,7 +125,7 @@ class Actuator:
             else:
                 stationary_counter = 0
 
-# change actuator direction
+    # change actuator direction
     def changeDirection(self):
         self.current_direction = self.opposite(self.current_direction)
         self.direction.value(self.current_direction)  # reverse direction
@@ -124,7 +133,7 @@ class Actuator:
         with open('stacking_state.txt') as infp:
             infp.write(str(self.line_stack_state))
 
-# manually adjust level wind position
+    # manually adjust level wind position
     def ManualAdjust(self, in_string):
         if in_string == 'cd':
             print('changing level wind direction')
@@ -138,21 +147,24 @@ class Actuator:
                 direction = 1
             self.move(0, direction, abs(distance), True)
 
-# reed switch irq for rotation tracking
-    def rotationTrackingReedSwitchTrigger(self, p):
-        current_reed_time = time.ticks_ms()
-        if (current_reed_time - self.last_reed_time) > false_pulse_delay_reed_sw:
-            time.sleep_ms(5)
-            if self.reed_sw.value() == 1:
-                self.last_reed_time = current_reed_time
-                self.NeedToMoveActuator = True  # move actuator one cable width
+    # reed switch for rotation tracking     
+    def rotationTrackingReedSw(self):
+        while True:
+            current_reed_time = time.ticks_ms()
+            if (current_reed_time - self.last_reed_time) > false_pulse_delay_reed_sw:
+                time.sleep_ms(5)
+                if self.reed_sw.value() == 1:
+                    self.last_reed_time = current_reed_time
+                    self.NeedToMoveActuator = True  # move actuator one cable width
+                    self.RotationCounter = self.RotationCounter + 1
+            time.sleep(0.001)
 
-# a useful function to flip booleans, ie 0 --> 1 and 1 --> 0
+    # a useful function to flip booleans, ie 0 --> 1 and 1 --> 0
     def opposite(self, input):
         out = 1 - input
         return out
 
-# actuator tick overshoot as a function of actuator speed
+    # actuator tick overshoot as a function of actuator speed
     def Overshoot(self, x):
         c0 = 0.0157003
         c1 = 0.0705877
@@ -160,7 +172,7 @@ class Actuator:
         out = c0 + c1*x + c2*x**2
         return out
 
-# return optimal actuator speed for a given distance, winch speed, % rotation time for actuation
+    # return optimal actuator speed for a given distance, winch speed, % rotation time for actuation
     def calculateSpeed(self, x, winch_speed, perc):
         # actuator speed in in/s = c0 + c1*P + c2*P^2
         c0 = 0.054397
@@ -171,7 +183,7 @@ class Actuator:
         P = (-c1 + (c1**2 + 4*c2*(x/T - c0))**0.5) / (2*c2)
         return P
 
-# seconds per spool rotation as a function of motor speed
+    # seconds per spool rotation as a function of motor speed
     def secondsPerRotation(self, x):
         rpm = -11.8876 + 0.372714*x + 0.00207748*x**2.0
         out = 60/rpm

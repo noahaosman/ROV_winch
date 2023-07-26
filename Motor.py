@@ -1,44 +1,36 @@
+# pyright: reportMissingImports=false
 import time
-from machine import Pin, PWM, ADC
+import board
+from digitalio import DigitalInOut, Direction, Pull  # GPIO module
+from gpiozero import AngularServo
+import Adafruit_ADS1x15
 
 
 class Motor:
-
-    # constants for motorized potentiometer
-    uMIN = 500000
-    uMAX = 1320000  # full 270 deg of motion = 2550000
-    uSTEP = int((uMAX-uMIN)/100)
 
     def __init__(
         self,
         FWD0_REV1_pin,
         ON_OFF_pin,
         mot_pot_pin,
-        current_sensor_pin,
         current_limit=5
     ):
-        self.FWD0_REV1 = Pin(FWD0_REV1_pin, Pin.OUT)
-        self.ON = Pin(ON_OFF_pin, Pin.OUT)
+
+        self.FWD0_REV1 = DigitalInOut(eval('board.D'+str(FWD0_REV1_pin)))
+        self.FWD0_REV1.direction = Direction.OUTPUT
+
+        self.ON = DigitalInOut(eval('board.D'+str(ON_OFF_pin)))
+        self.ON.direction = Direction.OUTPUT
         self.ON.value(0)
-        self.pwm = PWM(Pin(mot_pot_pin))
 
-        self.pwm.freq(50)
-        self.servo_position = self.uMIN  # intialize  speed as 0
-        self.pwm.duty_ns(self.servo_position)  #   set mot pot to zero
+        self.servo = AngularServo(mot_pot_pin, min_angle=0, max_angle=270)
+        self.servo.angle = 0
 
-        self.current_sensor = ADC(Pin(current_sensor_pin, mode=Pin.IN))
+        self.current_sensor = Adafruit_ADS1x15.ADS1115()
         self.current_limit = current_limit
 
     def move_servo(self, percent):
-        move_to = int(self.uMIN + (self.uMAX-self.uMIN)*(percent/100))
-        if move_to >= self.servo_position:
-            dir = 1
-        else:
-            dir = -1
-        for i in range(self.servo_position, move_to, dir*self.uSTEP):
-            self.pwm.duty_ns(i)
-            time.sleep(0.01)
-        self.servo_position = move_to
+        self.servo.angle = percent * 270
 
     def seconds_per_rotation(x):
         rpm = -11.8876 + 0.372714*x + 0.00207748*x**2.0
@@ -49,7 +41,7 @@ class Motor:
         # Measure current draw of motor. Shut off if above threshold
         voltage_divider = (100+47)/100
         if self.ON.value() == 1:
-            volty = self.current_sensor.read_u16() * 3.3 / 65535
+            volty = self.current_sensor.read_adc(0, gain=1)
             curry = (-10 * volty * voltage_divider + 25)
             vs = '%.2f' % volty
             cs = '%.2f' % curry
