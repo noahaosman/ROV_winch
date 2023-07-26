@@ -73,12 +73,14 @@ class Actuator:
             self.ON.value = 0
         else:
             self.ON.value = 1
+            
+        self.i2c.write_byte_data(60, 0, value)
 
-        value = round(value/100*4095)
-        buf = bytearray(2)
-        buf[0] = (value >> 8) & 0xFF
-        buf[1] = value & 0xFF
-        self.i2c.writeto(0x60, buf)
+        # value = round(value/100*4095)
+        # buf = bytearray(2)
+        # buf[0] = (value >> 8) & 0xFF
+        # buf[1] = value & 0xFF
+        # self.i2c.writeto(0x60, buf)
 
     # define actuator speed as a function of the winch speed and distance to move
     def getSpeed(self, winch_speed, distance, manual_adjust):
