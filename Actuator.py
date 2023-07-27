@@ -12,7 +12,7 @@ from threading import Thread
 RETRACT = 1
 EXTEND = 0
 false_pulse_delay_actuator = 0  # (zero for no debounce delay)
-pulses_per_inch = 54
+pulses_per_inch = 20
 false_pulse_delay_reed_sw = 0.250  # s
 
 
