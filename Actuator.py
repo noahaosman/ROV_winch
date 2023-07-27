@@ -73,9 +73,7 @@ class Actuator:
                 #if (current_pulse_time - self.last_pulse_time) > false_pulse_delay_actuator:  # debouncing
                 #self.last_pulse_time = current_pulse_time
                 self.position = self.position + 1
-                prior_feedback_val = current_feedback_value
-            print(current_feedback_value)
-            print(self.position)
+            prior_feedback_val = current_feedback_value
 
 
     # write speed to actuator. 0<=value<=100
