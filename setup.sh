@@ -58,4 +58,6 @@ pip3 install Adafruit-Blinka
 pip3 install adafruit-ads1x15
 pip3 install pyserial
 
-pigpiod
+
+echo "export GPIOZERO_PIN_FACTORY=pigpio" >> ~/.bashrc
+systemctl enable pigpiod

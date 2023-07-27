@@ -26,7 +26,7 @@ class Motor:
         self.ON.direction = Direction.OUTPUT
         self.ON.value = 0
 
-        self.servo = AngularServo(mot_pot_pin, min_angle=0, max_angle=270)
+        self.servo = AngularServo(mot_pot_pin, min_angle=0, max_angle=270, min_pulse_width=0.0005, max_pulse_width=0.0025)
         self.servo.angle = 0
 
         self.current_sensor = Adafruit_ADS1x15.ADS1115()
