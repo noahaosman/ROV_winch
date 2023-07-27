@@ -1,6 +1,7 @@
 # pyright: reportMissingImports=false
 import time
 import board
+import busio
 from digitalio import DigitalInOut, Direction, Pull  # GPIO module
 import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
@@ -30,7 +31,8 @@ class Motor:
         self.servo = AngularServo(mot_pot_pin, min_angle=0, max_angle=270, min_pulse_width=0.0005, max_pulse_width=0.0025)
         self.servo.angle = 0
 
-        self.current_sensor = ADS.ADS1115()
+        self.i2c = busio.I2C(board.SCL, board.SDA)
+        self.current_sensor = ADS.ADS1115(self.i2c, address=0x48)
         self.current_limit = current_limit
 
     def move_servo(self, percent):
