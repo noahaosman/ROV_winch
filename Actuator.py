@@ -68,13 +68,12 @@ class Actuator:
         while True:
             time.sleep(0.001)
             current_feedback_value = self.feedback.value
-            if current_feedback_value != prior_feedback_val:
-                current_pulse_time = time.time()
+            if current_feedback_value == False and prior_feedback_val == True:
+                #current_pulse_time = time.time()
                 #if (current_pulse_time - self.last_pulse_time) > false_pulse_delay_actuator:  # debouncing
+                #self.last_pulse_time = current_pulse_time
                 self.position = self.position + 1
-                self.last_pulse_time = current_pulse_time
                 prior_feedback_val = current_feedback_value
-            # print(current_feedback_value)
 
     # write speed to actuator. 0<=value<=100
     def writeSpeed(self, value):
@@ -84,12 +83,6 @@ class Actuator:
             self.ON.value = 1
 
         self.dac.normalized_value = value/100.0
-
-        # value = round(value/100*4095)
-        # buf = bytearray(2)
-        # buf[0] = (value >> 8) & 0xFF
-        # buf[1] = value & 0xFF
-        # self.i2c.writeto(0x60, buf)
 
     # define actuator speed as a function of the winch speed and distance to move
     def getSpeed(self, winch_speed, distance, manual_adjust):
@@ -127,7 +120,6 @@ class Actuator:
                 self.direction.value = self.opposite(direction)  # bounce back
                 break
             elif self.position == prior_position:  # if actuator is not moving
-                print('actuator stuck')
                 stationary_counter = stationary_counter + 1
                 if stationary_counter > 10:
                     self.writeSpeed(0)  # turn off actuator
