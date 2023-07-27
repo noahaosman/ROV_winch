@@ -64,7 +64,7 @@ class Actuator:
 
     # count actuator feedback pulses
     def updatePosition(self):
-        self.feedback.value = prior_feedback_val
+        prior_feedback_val = self.feedback.value
         while True:
             time.sleep(0.001)
             current_feedback_value = self.feedback.value
