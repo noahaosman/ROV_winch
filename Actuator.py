@@ -68,11 +68,10 @@ class Actuator:
         while True:
             time.sleep(0.001)
             current_feedback_value = self.feedback.value
+            print(current_feedback_value)
             if current_feedback_value == False and prior_feedback_val == True:
-                #current_pulse_time = time.time()
-                #if (current_pulse_time - self.last_pulse_time) > false_pulse_delay_actuator:  # debouncing
-                #self.last_pulse_time = current_pulse_time
                 self.position = self.position + 1
+            print(self.position)
             prior_feedback_val = current_feedback_value
 
 
