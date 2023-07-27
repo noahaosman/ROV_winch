@@ -47,7 +47,8 @@ class Motor:
         # Measure current draw of motor. Shut off if above threshold
         voltage_divider = (100+47)/100
         if self.ON.value == 1:
-            volty = AnalogIn(self.current_sensor, ADS.P0)
+            ADCread = AnalogIn(self.current_sensor, ADS.P0)
+            volty = ADCread.voltage
             curry = (-10 * volty * voltage_divider + 25)
             vs = '%.2f' % volty
             cs = '%.2f' % curry
@@ -56,7 +57,8 @@ class Motor:
             if abs(curry) > self.current_limit:
                 for i in range(4):  # double check before shutoff -- take an average over 50 ms
                     time.sleep(0.01)
-                    volty = AnalogIn(self.current_sensor, ADS.P0)
+                    ADCread = AnalogIn(self.current_sensor, ADS.P0)
+                    volty = ADCread.voltage
                     curry = curry - 10 * volty * voltage_divider + 25
                 curry = curry/(i+2)
                 if abs(curry) > self.current_limit:
