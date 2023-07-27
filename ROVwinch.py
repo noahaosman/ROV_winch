@@ -51,11 +51,11 @@ def control_winch():
     while True:
         try:
             uart0 = serial.Serial('dev/ttyAMA0', baudrate=115200)
-            heartbeat.off()
+            heartbeat.value = 0
             break
         except Exception:
             time.sleep(1)
-            heartbeat.on()
+            heartbeat.value = 1
 
     print("initialized")
     # -----------------------------------------------------------------------------
@@ -152,7 +152,7 @@ def control_winch():
 
             winch.measure_current()
 
-            heartbeat.toggle()
+            heartbeat.value = not heartbeat.value # toggle LED
 
         except Exception as err:
             print("Exception raised. Turning off winch ... ")
