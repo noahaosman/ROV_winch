@@ -127,6 +127,7 @@ class Actuator:
                 self.direction.value = self.opposite(direction)  # bounce back
                 break
             elif self.position == prior_position:  # if actuator is not moving
+                print('actuator stuck')
                 stationary_counter = stationary_counter + 1
                 if stationary_counter > 10:
                     self.writeSpeed(0)  # turn off actuator
