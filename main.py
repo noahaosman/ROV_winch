@@ -1,6 +1,7 @@
 import ROVwinch
 import time
 import argparse
+import traceback
 
 # parse arguements
 argParser = argparse.ArgumentParser()
@@ -10,8 +11,8 @@ args = argParser.parse_args()
 while True:
     try:
         ROVwinch.control_winch(args.mode)
-    except Exception as e:
-        print(e)
-        time.sleep(15)
+    except Exception:
+        print(traceback.format_exc())
+        time.sleep(10)
         
     
