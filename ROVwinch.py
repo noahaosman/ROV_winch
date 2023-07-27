@@ -4,6 +4,7 @@ import board
 from digitalio import DigitalInOut, Direction, Pull  # GPIO module
 from threading import Thread
 import serial
+import traceback
 
 from Motor import Motor
 from Actuator import Actuator
@@ -51,7 +52,7 @@ def control_winch(mode):
     while True:
         if mode == 'debug':
             print('COMMAND OPTIONS:')
-            print('    - ROF :: move motor (-1 = in | 0 = off | 1 = out)')
+            print('    - ROF <ARG1> SPD <arg2> :: move motor (-1 = in | 0 = off | 1 = out) and set speed (<float> 0<-->100)')
             print('    - LWA :: Level wind adjust ( CD = change dir. | <float> = move <float> inches)')
             print('    - TDA :: Tether diameter adjust (<float> set tether diameter to <float> inches)' )
             print('    - CLA :: Current limit adjust (<float> sets motor current limit to <float> amps)')
@@ -169,10 +170,10 @@ def control_winch(mode):
 
             heartbeat.value = not heartbeat.value # toggle LED
 
-        except Exception as err:
+        except Exception:
             print("Exception raised. Turning off winch ... ")
             winch.ON.value = 0
             winch.move_servo(0)
             level_wind.writeSpeed(0)
-            print(err)
+            print(traceback.format_exc())
 

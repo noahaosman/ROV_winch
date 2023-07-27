@@ -53,7 +53,7 @@ class Motor:
             if abs(curry) > self.current_limit:
                 for i in range(4):  # double check before shutoff -- take an average over 50 ms
                     time.sleep(0.01)
-                    volty = self.current_sensor.read_u16() * 3.3 / 65535
+                    volty = self.current_sensor.read_adc(0, gain=1)
                     curry = curry - 10 * volty * voltage_divider + 25
                 curry = curry/(i+2)
                 if abs(curry) > self.current_limit:
