@@ -78,6 +78,7 @@ def control_winch(mode):
             try:
                 if mode == 'debug':
                     in_strings = input('Input (<COMMAND> <VALUE>) : ' )
+                    in_strings = in_strings.split()
                 else:
                     serial_in = uart0.readline()
                     in_decoded = serial_in.decode('UTF-8')
