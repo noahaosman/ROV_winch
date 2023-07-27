@@ -68,13 +68,13 @@ class Actuator:
         while True:
             time.sleep(0.001)
             current_feedback_value = self.feedback.value
-            if current_feedback_value == True and prior_feedback_val == False:
+            if current_feedback_value != prior_feedback_val:
                 current_pulse_time = time.time()
                 #if (current_pulse_time - self.last_pulse_time) > false_pulse_delay_actuator:  # debouncing
                 self.position = self.position + 1
                 self.last_pulse_time = current_pulse_time
-                print(self.position)
                 prior_feedback_val = current_feedback_value
+            print(self.position)
 
     # write speed to actuator. 0<=value<=100
     def writeSpeed(self, value):
