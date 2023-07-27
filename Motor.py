@@ -2,7 +2,8 @@
 import time
 import board
 from digitalio import DigitalInOut, Direction, Pull  # GPIO module
-import Adafruit_ADS1x15
+import adafruit_ads1x15.ads1115 as ADS
+from adafruit_ads1x15.analog_in import AnalogIn
 from gpiozero import AngularServo
 from gpiozero.pins.pigpio import PiGPIOFactory
 
@@ -29,7 +30,7 @@ class Motor:
         self.servo = AngularServo(mot_pot_pin, min_angle=0, max_angle=270, min_pulse_width=0.0005, max_pulse_width=0.0025)
         self.servo.angle = 0
 
-        self.current_sensor = Adafruit_ADS1x15.ADS1115()
+        self.current_sensor = ADS.ADS1115()
         self.current_limit = current_limit
 
     def move_servo(self, percent):
@@ -44,7 +45,7 @@ class Motor:
         # Measure current draw of motor. Shut off if above threshold
         voltage_divider = (100+47)/100
         if self.ON.value == 1:
-            volty = self.current_sensor.read_adc(0, gain=1)
+            volty = AnalogIn(self.current_sensor, ADS.P0)
             curry = (-10 * volty * voltage_divider + 25)
             vs = '%.2f' % volty
             cs = '%.2f' % curry
@@ -53,7 +54,7 @@ class Motor:
             if abs(curry) > self.current_limit:
                 for i in range(4):  # double check before shutoff -- take an average over 50 ms
                     time.sleep(0.01)
-                    volty = self.current_sensor.read_adc(0, gain=1)
+                    volty = AnalogIn(self.current_sensor, ADS.P0)
                     curry = curry - 10 * volty * voltage_divider + 25
                 curry = curry/(i+2)
                 if abs(curry) > self.current_limit:
