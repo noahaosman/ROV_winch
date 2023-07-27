@@ -27,7 +27,7 @@ class Actuator:
         cable_diameter=0.375
     ):
         self.i2c = busio.I2C(board.SCL, board.SDA)
-        self.dac = adafruit_mcp4725.MCP4725(self.i2c)
+        self.dac = adafruit_mcp4725.MCP4725(self.i2c, address=0x60)
         self.ON = DigitalInOut(eval('board.D'+str(ON_OFF_pin)))
         self.ON.direction = Direction.OUTPUT
         self.direction = DigitalInOut(eval('board.D'+str(direction_pin)))

@@ -11,7 +11,7 @@ import Overboarding
 
 # =============================================================================
 
-def control_winch():
+def control_winch(mode):
 
     # -----------------------------------------------------------------------------
     # initialize heartbeat LED
@@ -49,6 +49,14 @@ def control_winch():
     # initialize serial comm ------------------------------------------------------
     # note: board LED will stay constant on while attempting to establish connection
     while True:
+        if mode == 'debug':
+            print('COMMAND OPTIONS:')
+            print('    - ROF :: move motor (-1 = in | 0 = off | 1 = out)')
+            print('    - LWA :: Level wind adjust ( CD = change dir. | <float> = move <float> inches)')
+            print('    - TDA :: Tether diameter adjust (<float> set tether diameter to <float> inches)' )
+            print('    - CLA :: Current limit adjust (<float> sets motor current limit to <float> amps)')
+            break
+
         try:
             uart0 = serial.Serial('dev/ttyAMA0', baudrate=115200)
             heartbeat.value = 0
@@ -68,10 +76,13 @@ def control_winch():
 
             # read any serial in
             try:
-                serial_in = uart0.readline()
-                in_decoded = serial_in.decode('UTF-8')
-                in_strings = in_decoded.split()
-                print(in_strings)
+                if mode == 'debug':
+                    in_strings = input('Input (<COMMAND> <VALUE>) : ' )
+                else:
+                    serial_in = uart0.readline()
+                    in_decoded = serial_in.decode('UTF-8')
+                    in_strings = in_decoded.split()
+                    print(in_strings)
             except Exception:
                 in_strings = ['N/A']
                 out_string = level_wind.RotationCounter
