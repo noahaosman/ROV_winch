@@ -66,12 +66,10 @@ class Actuator:
     def updatePosition(self):
         prior_feedback_val = self.feedback.value
         while True:
-            time.sleep(0.001)
+            time.sleep(0.000001)
             current_feedback_value = self.feedback.value
-            print(current_feedback_value)
             if current_feedback_value == False and prior_feedback_val == True:
                 self.position = self.position + 1
-            print(self.position)
             prior_feedback_val = current_feedback_value
 
 
