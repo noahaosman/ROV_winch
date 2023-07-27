@@ -11,7 +11,7 @@ from threading import Thread
 # constants for actuator
 RETRACT = 1
 EXTEND = 0
-false_pulse_delay_actuator = 2  # (zero for no debounce delay)
+false_pulse_delay_actuator = 0.002  # (zero for no debounce delay)
 pulses_per_inch = 54
 false_pulse_delay_reed_sw = 0.250  # s
 
