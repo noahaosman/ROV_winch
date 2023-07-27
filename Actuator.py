@@ -64,13 +64,17 @@ class Actuator:
 
     # count actuator feedback pulses
     def updatePosition(self):
+        self.feedback.value = prior_feedback_val
         while True:
-            current_pulse_time = time.time()
-            if (current_pulse_time - self.last_pulse_time) > false_pulse_delay_actuator:  # debouncing
-                self.position = self.position + 1
-                self.last_pulse_time = current_pulse_time
-                print(self.position)
             time.sleep(0.001)
+            current_feedback_value = self.feedback.value
+            if current_feedback_value == 1 and prior_feedback_val == 0:
+                current_pulse_time = time.time()
+                if (current_pulse_time - self.last_pulse_time) > false_pulse_delay_actuator:  # debouncing
+                    self.position = self.position + 1
+                    self.last_pulse_time = current_pulse_time
+                    print(self.position)
+                    prior_feedback_val = current_feedback_value
 
     # write speed to actuator. 0<=value<=100
     def writeSpeed(self, value):
@@ -156,15 +160,19 @@ class Actuator:
 
     # reed switch for rotation tracking     
     def rotationTrackingReedSw(self):
+        prior_reedsw_value = self.reed_sw.value
         while True:
-            current_reed_time = time.time()
-            if (current_reed_time - self.last_reed_time) > false_pulse_delay_reed_sw:
-                time.sleep(0.005)
-                if self.reed_sw.value == 1:
-                    self.last_reed_time = current_reed_time
-                    self.NeedToMoveActuator = True  # move actuator one cable width
-                    self.RotationCounter = self.RotationCounter + 1
             time.sleep(0.001)
+            current_reedsw_value = self.reed_sw.value
+            if current_reedsw_value == 1 and prior_reedsw_value == 0:
+                current_reed_time = time.time()
+                if (current_reed_time - self.last_reed_time) > false_pulse_delay_reed_sw:
+                    time.sleep(0.005)
+                    if self.reed_sw.value == 1:
+                        self.last_reed_time = current_reed_time
+                        self.NeedToMoveActuator = True  # move actuator one cable width
+                        self.RotationCounter = self.RotationCounter + 1
+                        prior_reedsw_value = current_reedsw_value
 
     # a useful function to flip booleans, ie 0 --> 1 and 1 --> 0
     def opposite(self, input):
