@@ -1,9 +1,12 @@
 # pyright: reportMissingImports=false
 import time
 import board
+import busio
 from digitalio import DigitalInOut, Direction, Pull  # GPIO module
+import adafruit_mcp4725
 import smbus # i2c package
 from threading import Thread
+
 
 # constants for actuator
 RETRACT = 1
@@ -23,7 +26,8 @@ class Actuator:
         rotation_pin,
         cable_diameter=0.375
     ):
-        self.i2c = smbus.SMBus(1)
+        self.i2c = busio.I2C(board.SCL, board.SDA)
+        self.dac = adafruit_mcp4725.MCP4725(self.i2c)
         self.ON = DigitalInOut(eval('board.D'+str(ON_OFF_pin)))
         self.ON.direction = Direction.OUTPUT
         self.direction = DigitalInOut(eval('board.D'+str(direction_pin)))
@@ -53,7 +57,7 @@ class Actuator:
 
         self.MAspeed = 100
 
-        self.time_init = time.time()
+        self.time_init = time.time()        
 
         with open('stacking_state.txt') as infp:
             self.line_stack_state = int(infp.read())
@@ -73,8 +77,8 @@ class Actuator:
             self.ON.value = 0
         else:
             self.ON.value = 1
-            
-        self.i2c.write_byte_data(60, 0, value)
+
+        self.dac.normalized_value = value/100.0
 
         # value = round(value/100*4095)
         # buf = bytearray(2)
