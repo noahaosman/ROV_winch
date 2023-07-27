@@ -33,7 +33,7 @@ class Motor:
         self.current_limit = current_limit
 
     def move_servo(self, percent):
-        self.servo.angle = percent * 270
+        self.servo.angle = percent * 270/100
 
     def seconds_per_rotation(x):
         rpm = -11.8876 + 0.372714*x + 0.00207748*x**2.0
