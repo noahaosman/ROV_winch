@@ -142,7 +142,7 @@ def control_winch(mode):
                 out_string = "INFO Current limit updated.\r\n"
 
             # serial write encoder position & velocity
-            if mode is 'debug':
+            if mode == 'debug':
                 print(out_string)
             else:
                 try:
