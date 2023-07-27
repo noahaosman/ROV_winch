@@ -142,12 +142,15 @@ def control_winch(mode):
                 out_string = "INFO Current limit updated.\r\n"
 
             # serial write encoder position & velocity
-            try:
-                uart0.write(bytes(out_string, 'UTF-8'))
-                if out_string.split()[0] == "INFO":
-                    print(out_string)
-            except Exception:
-                print("error sending serial output")
+            if mode is 'debug':
+                print(out_string)
+            else:
+                try:
+                    uart0.write(bytes(out_string, 'UTF-8'))
+                    if out_string.split()[0] == "INFO":
+                        print(out_string)
+                except Exception:
+                    print("error sending serial output")
 
             # Check if actuator needs to be moved
             if level_wind.NeedToMoveActuator:
