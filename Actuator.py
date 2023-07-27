@@ -75,6 +75,7 @@ class Actuator:
                     self.last_pulse_time = current_pulse_time
                     print(self.position)
                     prior_feedback_val = current_feedback_value
+            print(self.position)
 
     # write speed to actuator. 0<=value<=100
     def writeSpeed(self, value):
