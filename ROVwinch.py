@@ -159,7 +159,7 @@ def control_winch(mode):
 
             # serial write encoder position & velocity
             if mode == 'debug':
-                if out_string != "INFO invalid input.\r\n" and " V ;" not in out_string:
+                if out_string != "INFO invalid input.\r\n":
                     print(out_string)
                 in_strings = ['N/Ainit']
             else:
