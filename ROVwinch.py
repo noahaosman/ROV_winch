@@ -61,11 +61,11 @@ def control_winch(mode):
 
         # start thread for debug mode user input
         in_strings = 'init'
-        Thread(daemon=True, target=get_usr_input).start()
         def get_usr_input():
             while True:
                 in_strings = input('Input (<COMMAND> <VALUE>) : ' )
                 in_strings = in_strings.split()
+        Thread(daemon=True, target=get_usr_input).start()
     else:
         while True:
             try:
