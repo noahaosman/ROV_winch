@@ -41,7 +41,7 @@ def control_winch(mode):
     # -----------------------------------------------------------------------------
 
     # Overboarding arm state ------------------------------------------------------
-    overboard = Overboarding(
+    overboard = Overboarding.Switch(
         overboardPin = 21,
         RetractedPin = 22
     )
