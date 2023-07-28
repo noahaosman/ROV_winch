@@ -60,7 +60,7 @@ def control_winch(mode):
         print('    - CLA :: Current limit adjust (<float> sets motor current limit to <float> amps)')
 
         # start thread for debug mode user input
-        in_strings = 'init'
+        in_strings = ['N/A']
         def get_usr_input():
             while True:
                 in_strings = input('Input (<COMMAND> <VALUE>) : ' )
@@ -152,12 +152,13 @@ def control_winch(mode):
 
              # undefined user input
             else:
-                out_string = "invalid input.\r\n"
+                out_string = "INFO invalid input.\r\n"
 
 
             # serial write encoder position & velocity
             if mode == 'debug':
-                print(out_string)
+                # print(out_string)
+                pass
             else:
                 try:
                     uart0.write(bytes(out_string, 'UTF-8'))
