@@ -192,5 +192,6 @@ def control_winch(mode):
             winch.ON.value = 0
             winch.move_servo(0)
             level_wind.writeSpeed(0)
+            in_strings = ['N/Ainit']
             print(traceback.format_exc())
 
