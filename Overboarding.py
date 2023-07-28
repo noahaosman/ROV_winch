@@ -34,7 +34,6 @@ class Switch:
     def read_state(self, winch):
         last_state = 0
         while True:
-            print(last_state)
             if self.retracted.value == 1 and self.deployed.value == 0 and last_state != 1:
                 print('Arm retracted, shutting motor off.')
                 winch.ON.value = 0
@@ -51,7 +50,8 @@ class Switch:
                     winch.move_servo(20)
                 last_state = 3
 
-            else: # this state is undefined. Stop everything.
+            elif self.retracted.value == 1 and self.deployed.value == 1: 
+                # this state is undefined. Stop everything.
                 winch.move_servo(0)
                 last_state = 0
             
