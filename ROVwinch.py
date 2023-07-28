@@ -160,6 +160,8 @@ def control_winch(mode):
             if mode == 'debug':
                 if out_string != "INFO invalid input.\r\n":
                     print(out_string)
+                else:
+                    print(in_strings)
                 pass
             else:
                 try:
