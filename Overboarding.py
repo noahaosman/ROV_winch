@@ -12,7 +12,7 @@ class Switch:
     def __init__(
         self,
         overboardPin,
-        retractPin
+        RetractedPin
     ):
         
         logic_high = DigitalInOut(board.D12)
@@ -23,7 +23,7 @@ class Switch:
         self.deployed.direction = Direction.INPUT
         self.deployed.pull = Pull.DOWN
 
-        self.retracted = DigitalInOut(eval('board.D'+str(retractPin)))
+        self.retracted = DigitalInOut(eval('board.D'+str(RetractedPin)))
         self.retracted.direction = Direction.INPUT
         self.retracted.pull = Pull.DOWN
 
