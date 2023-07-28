@@ -19,14 +19,6 @@ def control_winch(mode):
     # initialize heartbeat LED
     heartbeat = DigitalInOut(board.D13)
     heartbeat.direction = Direction.OUTPUT
- 
-    # # Rotary encoder --------------------------------------------------------------
-    # encoder = RotaryIRQ(
-    #     pin_num_clk=22,
-    #     pin_num_dt=21,
-    #     block_radius=0.062,  # block radius in meters,
-    # )
-    # -----------------------------------------------------------------------------
 
     # Winch motor -----------------------------------------------------------------
     winch = Motor(
@@ -47,6 +39,15 @@ def control_winch(mode):
     )
     level_wind.writeSpeed(0)
     # -----------------------------------------------------------------------------
+
+    # Overboarding arm state ------------------------------------------------------
+    overboard = Overboarding(
+        overboardPin = 21,
+        RetractedPin = 22
+    )
+    Thread(daemon=True, target=overboard.read_state, args=(winch, )).start()
+    # -----------------------------------------------------------------------------
+
 
     # initialize input medium -----------------------------------------------------
     #  - debug mode      : terminal input

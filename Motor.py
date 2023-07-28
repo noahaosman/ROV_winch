@@ -64,5 +64,4 @@ class Motor:
                 if abs(curry) > self.current_limit:
                     self.ON.value = 0
                     self.move_servo(0)
-#                     level_wind.writeSpeed(0)
                     print("HIGH CURRENT (", str(curry), "A ) DETECTED! shutting off motor...")

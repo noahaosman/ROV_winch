@@ -2,6 +2,7 @@
 import time
 import board
 from digitalio import DigitalInOut, Direction, Pull  # GPIO module
+from threading import Thread
 
 false_pulse_delay_actuator = 2  # (zero for no debounce delay)
 false_pulse_delay_reed_sw = 0.250  # s
@@ -13,6 +14,10 @@ class Switch:
         overboardPin,
         retractPin
     ):
+        
+        logic_high = DigitalInOut(board.D12)
+        logic_high.direction = Direction.OUTPUT
+        logic_high.value = 1
         
         self.deployed = DigitalInOut(eval('board.D'+str(overboardPin)))
         self.deployed.direction = Direction.INPUT
@@ -33,10 +38,11 @@ class Switch:
                 winch.move_servo(0)
 
             elif self.retracted.value == 0 and self.deployed.value == 1:
-                winch.move_servo(0)
+                pass
 
             elif self.retracted.value == 0 and self.deployed.value == 0:
-                winch.move_servo(0)
+                if winch.ON.value == 1 and winch.servo.angle >= 20 * 270/100:
+                    winch.move_servo(20)
 
             else:
                 winch.move_servo(0)
