@@ -60,7 +60,7 @@ def control_winch(mode):
         print('    - CLA :: Current limit adjust (<float> sets motor current limit to <float> amps)')
 
         # start thread for debug mode user input
-        in_strings = ['N/A']
+        in_strings = ['N/Ainit']
         def get_usr_input():
             global in_strings
             while True:
