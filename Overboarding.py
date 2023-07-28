@@ -45,8 +45,8 @@ class Switch:
                 last_state = 2
 
             elif self.retracted.value == 0 and self.deployed.value == 0:
-                print('Arm retracting, slowing motor down.')
                 if winch.ON.value == 1 and winch.servo.angle > 20 * 270/100:
+                    print('Arm retracting, slowing motor down.')
                     winch.move_servo(20)
                 last_state = 3
 
