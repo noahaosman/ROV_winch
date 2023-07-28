@@ -132,7 +132,7 @@ class Actuator:
         self.current_direction = self.opposite(self.current_direction)
         self.direction.value = self.current_direction  # reverse direction
         self.line_stack_state = self.opposite(self.line_stack_state)
-        with open('stacking_state.txt') as infp:
+        with open('stacking_state.txt', 'w') as infp:
             infp.write(str(self.line_stack_state))
 
     # manually adjust level wind position
