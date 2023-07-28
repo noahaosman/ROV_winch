@@ -163,7 +163,7 @@ class Actuator:
                         self.last_reed_time = current_reed_time
                         self.NeedToMoveActuator = True  # move actuator one cable width
                         self.RotationCounter = self.RotationCounter + 1
-                        prior_reedsw_value = current_reedsw_value
+            prior_reedsw_value = current_reedsw_value
 
     # a useful function to flip booleans, ie 0 --> 1 and 1 --> 0
     def opposite(self, input):
