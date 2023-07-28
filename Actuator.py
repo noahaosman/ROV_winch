@@ -59,7 +59,7 @@ class Actuator:
 
         self.time_init = time.time()        
 
-        with open('stacking_state.txt') as infp:
+        with open('stacking_state.txt', 'r') as infp:
             self.line_stack_state = int(infp.read())
 
     # count actuator feedback pulses
