@@ -152,7 +152,7 @@ def control_winch(mode):
 
              # undefined user input
             else:
-                pass
+                out_string = "invalid input.\r\n"
 
 
             # serial write encoder position & velocity
