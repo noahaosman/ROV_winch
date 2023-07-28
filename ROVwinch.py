@@ -10,6 +10,7 @@ from Motor import Motor
 from Actuator import Actuator
 import Overboarding
 
+
 # =============================================================================
 
 def control_winch(mode):
@@ -47,24 +48,33 @@ def control_winch(mode):
     level_wind.writeSpeed(0)
     # -----------------------------------------------------------------------------
 
-    # initialize serial comm ------------------------------------------------------
-    # note: board LED will stay constant on while attempting to establish connection
-    while True:
-        if mode == 'debug':
-            print('COMMAND OPTIONS:')
-            print('    - ROF <ARG1> SPD <arg2> :: move motor (-1 = in | 0 = off | 1 = out) and set speed (<float> 0<-->100)')
-            print('    - LWA :: Level wind adjust ( CD = change dir. | <float> = move <float> inches)')
-            print('    - TDA :: Tether diameter adjust (<float> set tether diameter to <float> inches)' )
-            print('    - CLA :: Current limit adjust (<float> sets motor current limit to <float> amps)')
-            break
+    # initialize input medium -----------------------------------------------------
+    #  - debug mode      : terminal input
+    #  - deployment mode : serial comm via ubox
+    #  note: board LED will stay constant on while attempting to establish connection
+    if mode == 'debug':
+        print('COMMAND OPTIONS:')
+        print('    - ROF <ARG1> SPD <arg2> :: move motor (-1 = in | 0 = off | 1 = out) and set speed (<float> 0<-->100)')
+        print('    - LWA :: Level wind adjust ( CD = change dir. | <float> = move <float> inches)')
+        print('    - TDA :: Tether diameter adjust (<float> set tether diameter to <float> inches)' )
+        print('    - CLA :: Current limit adjust (<float> sets motor current limit to <float> amps)')
 
-        try:
-            uart0 = serial.Serial('dev/ttyAMA0', baudrate=115200)
-            heartbeat.value = 0
-            break
-        except Exception:
-            time.sleep(1)
-            heartbeat.value = 1
+        # start thread for debug mode user input
+        in_strings = 'init'
+        Thread(daemon=True, target=get_usr_input).start()
+        def get_usr_input():
+            while True:
+                in_strings = input('Input (<COMMAND> <VALUE>) : ' )
+                in_strings = in_strings.split()
+    else:
+        while True:
+            try:
+                uart0 = serial.Serial('dev/ttyAMA0', baudrate=115200)
+                heartbeat.value = 0
+                break
+            except Exception:
+                time.sleep(1)
+                heartbeat.value = 1
 
     print("initialized")
     # -----------------------------------------------------------------------------
@@ -77,10 +87,7 @@ def control_winch(mode):
 
             # read any serial in
             try:
-                if mode == 'debug':
-                    in_strings = input('Input (<COMMAND> <VALUE>) : ' )
-                    in_strings = in_strings.split()
-                else:
+                if mode != 'debug':
                     serial_in = uart0.readline()
                     in_decoded = serial_in.decode('UTF-8')
                     in_strings = in_decoded.split()
@@ -143,6 +150,11 @@ def control_winch(mode):
                 winch.current_limit = float(in_strings[1])
                 out_string = "INFO Current limit updated.\r\n"
 
+             # undefined user input
+            else:
+                pass
+
+
             # serial write encoder position & velocity
             if mode == 'debug':
                 print(out_string)
@@ -153,6 +165,7 @@ def control_winch(mode):
                         print(out_string)
                 except Exception:
                     print("error sending serial output")
+
 
             # Check if actuator needs to be moved
             if level_wind.NeedToMoveActuator:
