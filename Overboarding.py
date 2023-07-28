@@ -35,14 +35,17 @@ class Switch:
         last_state = 0
         while True:
             if self.retracted.value == 1 and self.deployed.value == 0 and last_state != 1:
+                print('Arm retracted, shutting motor off.')
                 winch.ON.value = 0
                 winch.move_servo(0)
                 last_state = 1
 
             elif self.retracted.value == 0 and self.deployed.value == 1 and last_state != 2:
+                print('Arm overboard, no speed restrictions.')
                 last_state = 2
 
             elif self.retracted.value == 0 and self.deployed.value == 0:
+                print('Arm retracting, slowing motor down.')
                 if winch.ON.value == 1 and winch.servo.angle > 20 * 270/100:
                     winch.move_servo(20)
                 last_state = 3
