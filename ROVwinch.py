@@ -42,8 +42,8 @@ def control_winch(mode):
 
     # Overboarding arm state ------------------------------------------------------
     overboard = Overboarding.Switch(
-        overboardPin = 21,
-        RetractedPin = 22
+        overboardPin = 7,
+        RetractedPin = 8
     )
     Thread(daemon=True, target=overboard.read_state, args=(winch, )).start()
     # -----------------------------------------------------------------------------
