@@ -32,19 +32,23 @@ class Switch:
     #   2) retracted LOW , deployed HIGH ::  ROV is in water  --> Motor speed unrestricted
     #   3) retracted LOW , deployed LOW  ::  arm is moving into retracted position --> restrict motor to low speed
     def read_state(self, winch):
+        last_state = 0
         while True:
-            if   self.retracted.value == 1 and self.deployed.value == 0:
+            if self.retracted.value == 1 and self.deployed.value == 0 and last_state != 1:
                 winch.ON.value = 0
                 winch.move_servo(0)
+                last_state = 1
 
-            elif self.retracted.value == 0 and self.deployed.value == 1:
-                pass
+            elif self.retracted.value == 0 and self.deployed.value == 1 and last_state != 2:
+                last_state = 2
 
             elif self.retracted.value == 0 and self.deployed.value == 0:
-                if winch.ON.value == 1 and winch.servo.angle >= 20 * 270/100:
+                if winch.ON.value == 1 and winch.servo.angle != 20 * 270/100:
                     winch.move_servo(20)
+                last_state = 3
 
-            else:
+            else: # this state is undefined. Stop everything.
                 winch.move_servo(0)
+                last_state = 0
             
             time.sleep(0.25)
