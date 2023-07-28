@@ -161,9 +161,7 @@ def control_winch(mode):
             if mode == 'debug':
                 if out_string != "INFO invalid input.\r\n":
                     print(out_string)
-                else:
-                    print(in_strings)
-                pass
+                in_strings = ['N/Ainit']
             else:
                 try:
                     uart0.write(bytes(out_string, 'UTF-8'))
