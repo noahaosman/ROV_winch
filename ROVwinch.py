@@ -62,6 +62,7 @@ def control_winch(mode):
         # start thread for debug mode user input
         in_strings = ['N/A']
         def get_usr_input():
+            global in_strings
             while True:
                 in_strings = input('Input (<COMMAND> <VALUE>) : ' )
                 in_strings = in_strings.split()
