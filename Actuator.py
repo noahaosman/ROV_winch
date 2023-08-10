@@ -13,7 +13,6 @@ RETRACT = 1
 EXTEND = 0
 false_pulse_delay_actuator = 0  # (zero for no debounce delay)
 pulses_per_inch = 50
-false_pulse_delay_reed_sw = 0.250  # s
 
 
 class Actuator:
@@ -23,7 +22,6 @@ class Actuator:
         ON_OFF_pin,
         direction_pin,
         feedback_pin,
-        rotation_pin,
         cable_diameter=0.375
     ):
         self.i2c = busio.I2C(board.SCL, board.SDA)
@@ -41,15 +39,6 @@ class Actuator:
         self.last_pulse_time = time.time()-false_pulse_delay_actuator
         self.position = 0
         Thread(daemon=True, target=self.updatePosition).start()
-
-        # rotation tracking for spool
-        self.reed_sw = DigitalInOut(eval('board.D'+str(rotation_pin)))
-        self.reed_sw.direction = Direction.INPUT
-        self.reed_sw.pull = Pull.DOWN
-        self.last_reed_time = time.time()-false_pulse_delay_reed_sw
-        self.NeedToMoveActuator = False
-        self.RotationCounter = 0
-        Thread(daemon=True, target=self.rotationTrackingReedSw).start()
 
         self.ON.value = 0
 
@@ -148,22 +137,6 @@ class Actuator:
             else:
                 direction = 1
             self.move(0, direction, abs(distance), True)
-
-    # reed switch for rotation tracking     
-    def rotationTrackingReedSw(self):
-        prior_reedsw_value = self.reed_sw.value
-        while True:
-            time.sleep(0.001)
-            current_reedsw_value = self.reed_sw.value
-            if current_reedsw_value == 1 and prior_reedsw_value == 0:
-                current_reed_time = time.time()
-                if (current_reed_time - self.last_reed_time) > false_pulse_delay_reed_sw:
-                    time.sleep(0.005)
-                    if self.reed_sw.value == 1:
-                        self.last_reed_time = current_reed_time
-                        self.NeedToMoveActuator = True  # move actuator one cable width
-                        self.RotationCounter = self.RotationCounter + 1
-            prior_reedsw_value = current_reedsw_value
 
     # a useful function to flip booleans, ie 0 --> 1 and 1 --> 0
     def opposite(self, input):

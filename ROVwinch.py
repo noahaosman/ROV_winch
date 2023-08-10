@@ -25,8 +25,10 @@ def control_winch(mode):
         FWD0_REV1_pin=26,
         ON_OFF_pin=19,
         mot_pot_pin=16,
-        current_limit=6
+        rotation_pin=24,
+        current_limit=15
     )
+    Thread(daemon=True, target=winch.monitorCurrent).start()
     # -----------------------------------------------------------------------------
 
     # Level wind actuator ---------------------------------------------------------
@@ -34,7 +36,6 @@ def control_winch(mode):
         ON_OFF_pin=20,
         direction_pin=21,
         feedback_pin=10,
-        rotation_pin=24,
         cable_diameter=0.4
     )
     level_wind.writeSpeed(0)
@@ -97,7 +98,7 @@ def control_winch(mode):
                     print(in_strings)
             except Exception:
                 in_strings = ['N/A']
-                out_string = level_wind.RotationCounter
+                out_string = winch.rotations
                 pass
 
             # move motor FWD / REV / OFF
@@ -157,7 +158,6 @@ def control_winch(mode):
             else:
                 out_string = "INFO invalid input.\r\n"
 
-
             # serial write encoder position & velocity
             if mode == 'debug':
                 if out_string != "INFO invalid input.\r\n":
@@ -173,18 +173,16 @@ def control_winch(mode):
 
 
             # Check if actuator needs to be moved
-            if level_wind.NeedToMoveActuator:
+            if winch.NeedToMoveActuator:
                 if ROF == 1:  # FWD (feed out line)
                     level_wind.current_direction = level_wind.line_stack_state
                     level_wind.move(SPD)
                 elif ROF == -1:  # REV (take in line)
                     level_wind.current_direction = level_wind.opposite(level_wind.line_stack_state)
                     level_wind.move(SPD)
-                level_wind.NeedToMoveActuator = False
+                winch.NeedToMoveActuator = False
             else:
                 time.sleep(0.1)
-
-            winch.measure_current()
 
             heartbeat.value = not heartbeat.value # toggle LED
 
