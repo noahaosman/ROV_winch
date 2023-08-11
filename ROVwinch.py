@@ -73,7 +73,7 @@ def control_winch(mode):
     else:
         while True:
             try:
-                uart0 = serial.Serial('dev/ttyAMA0', baudrate=115200)
+                uart0 = serial.Serial('/dev/ttyAMA0', baudrate=115200, timeout = 0.1)
                 heartbeat.value = 0
                 break
             except Exception:
@@ -95,10 +95,12 @@ def control_winch(mode):
                     serial_in = uart0.readline()
                     in_decoded = serial_in.decode('UTF-8')
                     in_strings = in_decoded.split()
+                    if not in_strings:
+                        in_strings = ['N/A']
                     print(in_strings)
             except Exception:
                 in_strings = ['N/A']
-                out_string = winch.rotations
+                out_string = "ROT "+str(winch.rotations)
                 pass
 
             # move motor FWD / REV / OFF
@@ -155,6 +157,10 @@ def control_winch(mode):
                 out_string = "INFO Current limit updated.\r\n"
 
              # undefined user input
+
+            elif in_strings[0] == "N/A":
+                out_string = ""
+
             else:
                 out_string = "INFO invalid input.\r\n"
 
