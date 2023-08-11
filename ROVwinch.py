@@ -97,11 +97,9 @@ def control_winch(mode):
                     in_strings = in_decoded.split()
                     if not in_strings:
                         in_strings = ['N/A']
-                    print(in_strings)
+                    # print(in_strings)
             except Exception:
                 in_strings = ['N/A']
-                out_string = "ROT "+str(winch.rotations)
-                pass
 
             # move motor FWD / REV / OFF
             if in_strings[0] == "ROF":
@@ -159,7 +157,7 @@ def control_winch(mode):
              # undefined user input
 
             elif in_strings[0] == "N/A":
-                out_string = ""
+                out_string = "ROT "+str(winch.rotations)
 
             else:
                 out_string = "INFO invalid input.\r\n"
