@@ -36,21 +36,21 @@ def control_winch(mode):
         ON_OFF_pin=20,
         direction_pin=21,
         feedback_pin=10,
-        cable_diameter=0.4
+        cable_diameter=0.42
     )
     level_wind.writeSpeed(0)
     # -----------------------------------------------------------------------------
 
     # Overboarding arm state ------------------------------------------------------
-    overboard = Overboarding.Switch(
-        overboardPin = 7,
-        RetractedPin = 8
-    )
-    Thread(daemon=True, target=overboard.read_state, args=(winch, )).start()
+    # overboard = Overboarding.Switch(
+    #     overboardPin = 7,
+    #     RetractedPin = 8
+    # )
+    # Thread(daemon=True, target=overboard.read_state, args=(winch, )).start()
     # -----------------------------------------------------------------------------
 
 
-    # initialize input medium -----------------------------------------------------
+    # initialize input protocol ---------------------------------------------------
     #  - debug mode      : terminal input
     #  - deployment mode : serial comm via ubox
     #  note: board LED will stay constant on while attempting to establish connection
@@ -65,7 +65,7 @@ def control_winch(mode):
         global in_strings
         def get_usr_input():
             global in_strings
-            in_strings = ['N/Ainit']
+            in_strings = ['INIT']
             while True:
                 in_strings = input('Input (<COMMAND> <VALUE>) : ' )
                 in_strings = in_strings.split()
@@ -96,10 +96,10 @@ def control_winch(mode):
                     in_decoded = serial_in.decode('UTF-8')
                     in_strings = in_decoded.split()
                     if not in_strings:
-                        in_strings = ['N/A']
+                        in_strings = ['NULL']
                     # print(in_strings)
             except Exception:
-                in_strings = ['N/A']
+                in_strings = ['NULL']
 
             # move motor FWD / REV / OFF
             if in_strings[0] == "ROF":
@@ -166,7 +166,7 @@ def control_winch(mode):
             if mode == 'debug':
                 if out_string != "INFO invalid input.\r\n":
                     print(out_string)
-                in_strings = ['N/Ainit']
+                in_strings = ['INIT']
             else:
                 try:
                     uart0.write(bytes(out_string, 'UTF-8'))
@@ -195,6 +195,6 @@ def control_winch(mode):
             winch.ON.value = 0
             winch.move_servo(0)
             level_wind.writeSpeed(0)
-            in_strings = ['N/Ainit']
+            in_strings = ['INIT']
             print(traceback.format_exc())
 
