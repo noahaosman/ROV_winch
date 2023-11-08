@@ -57,37 +57,8 @@ apt-get install -y build-essential python3-smbus
 pip3 install Adafruit-Blinka
 pip3 install adafruit-circuitpython-ads1x15
 pip3 install pyserial
-pip3 install adafruit-circuitpython-mcp4725
+pip3 install adafruit-circuitpython-mcp4725 #?
 
 
 echo "export GPIOZERO_PIN_FACTORY=pigpio" >> ~/.bashrc
 systemctl enable pigpiod
-
-
-#---Service Script---
-
-
-# chmod +x /home/pi/ROVwinch/main.py
-
-# SERVICE_FILE="/etc/systemd/system/ROVwinch.service"
-# echo -n "" > $SERVICE_FILE
-# read -r -d '' SERVICE_LINE << EOM
-# [Unit]
-# Description=run primary winch control loop
-
-# [Service]
-# Type=simple
-# WorkingDirectory=/home/pi/ROVwinch
-# User=pi
-# Restart=always
-# RestartSec=30
-# StandardOutput=syslog
-# StandardError=syslog
-# SyslogIdentifier=ROVwinch
-# ExecStart=/home/pi/ROVwinch/main.py
-
-# [Install]
-# WantedBy=multi-user.target
-# EOM
-# echo "$SERVICE_LINE" > "$SERVICE_FILE"
-# systemctl enable ROVwinch

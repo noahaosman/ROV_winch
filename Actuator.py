@@ -48,7 +48,7 @@ class Actuator:
 
         self.time_init = time.time()        
 
-        with open('/home/pi/stacking_state.txt', 'r') as infp:
+        with open('/home/pi/ROV_winch/stacking_state.txt', 'r') as infp:
             self.line_stack_state = int(infp.read())
 
     # count actuator feedback pulses
@@ -79,8 +79,9 @@ class Actuator:
             else:
                 speed = 100
         else:  # else if winching, base speed off winch speed
-            speed = self.calculateSpeed(distance, winch_speed, 0.33)
-        speed = round(max(25, min(100, speed)))  # bound speed from 25 <-> 100
+            x2 = self.calculateSpeed(distance, winch_speed, 0.2)
+            speed = x2
+        speed = round(max(25, min(100, speed)))  # bound speed from 20 <-> 100
         return speed
 
     # move actuator some distance in inches
@@ -158,12 +159,12 @@ class Actuator:
         c2 = -0.0000678376
         SPR = self.secondsPerRotation(winch_speed)
         T = perc*SPR
-        P = (-c1 + (c1**2 + 4*c2*(x/T - c0))**0.5) / (2*c2) + 20 # constant offset to fix actuator not finishing movement
+        P = (-c1 + (c1**2 + 4*c2*(x/T - c0))**0.5) / (2*c2)
         return P
 
     # seconds per spool rotation as a function of motor speed
     def secondsPerRotation(self, x):
-        # rpm = -11.8876 + 0.372714*x + 0.00207748*x**2.0
-        rpm = 0.5*x # this comes from a 2000 rpm motor on a 40:1 gear box
+        #rpm = -11.8876 + 0.372714*x + 0.00207748*x**2.0
+        rpm = 0.5*x # this comes from a 2000rpm motor on a 40:1 gearbox
         out = 60/rpm
         return out
